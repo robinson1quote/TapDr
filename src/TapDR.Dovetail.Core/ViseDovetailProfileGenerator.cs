@@ -1,6 +1,10 @@
 namespace TapDR.Dovetail.Core;
 
-/// <summary>A 2D cross-section of a rectangular vise blank with a dovetail relief cut into its underside.</summary>
+/// <summary>
+/// A parametric cross-section primitive only. It is deliberately not marked
+/// production-ready until drawing datums, edge-break geometry, and solid tests
+/// are complete.
+/// </summary>
 public sealed record ViseDovetailCrossSection
 {
     public required double StockWidth { get; init; }
@@ -9,13 +13,12 @@ public sealed record ViseDovetailCrossSection
     public required double LeftLocatingFlat { get; init; }
     public required double RightLocatingFlat { get; init; }
     public required double FlankAngleDegrees { get; init; }
-
-    /// <summary>Closed boundary points in counter-clockwise order, in the input unit.</summary>
     public required IReadOnlyList<ProfilePoint2D> Boundary { get; init; }
+    public required double UndercutPerSide { get; init; }
 
     public double MouthWidth => StockWidth - LeftLocatingFlat - RightLocatingFlat;
-    public double UndercutPerSide { get; init; }
     public double MaximumDovetailWidth => MouthWidth + 2 * UndercutPerSide;
+    public bool IsProductionReady => false;
 }
 
 public readonly record struct ProfilePoint2D(double X, double Y);
@@ -23,10 +26,9 @@ public readonly record struct ProfilePoint2D(double X, double Y);
 public static class ViseDovetailProfileGenerator
 {
     /// <summary>
-    /// Creates a bottom-edge dovetail relief. FlankAngleDegrees is measured from
-    /// the horizontal bottom face. The profile width is explicitly derived from
-    /// the two locating flats and stock width; no undocumented DSP-V width datum
-    /// is guessed. This is a geometric model, not authorization to machine it.
+    /// Creates an underside-relief boundary. FlankAngleDegrees is measured
+    /// from the horizontal underside. The stock width and locating flats are
+    /// explicit inputs; the generator never guesses a drawing datum.
     /// </summary>
     public static ViseDovetailCrossSection Generate(ViseStockPrepParameters p)
     {
@@ -58,7 +60,7 @@ public static class ViseDovetailProfileGenerator
 
         if (points[2].X >= points[3].X)
             throw new ArgumentException(
-                "The dovetail flanks overlap. Increase stock width or locating-flat span, or reduce depth/angle.", nameof(p));
+                "The dovetail flanks overlap. Increase stock width or available span, or reduce depth/angle.", nameof(p));
 
         return new ViseDovetailCrossSection
         {
