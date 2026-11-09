@@ -1,46 +1,66 @@
-# Vise cross-section geometry — design note
+# Vise cross-section geometry — DSP-V drawing interpretation
 
-## What the first geometry commit does
+## Drawing source and datum model
 
-`ViseDovetailProfileGenerator.Generate` builds an eight-vertex closed 2D boundary for a rectangular stock blank with a dovetail relief in its underside. It accepts the stock width/height, left/right locating flats, depth and flank angle from the validated vise parameter model.
+The common 5th Axis DSP-V Rev A drawing labels:
+- A: overall stock width.
+- B: two minimum 0.250 in locating-flat lengths, one at each stock edge.
+- C: 0.080 in dovetail depth.
+- Maximum edge break: 0.010 in at the dovetail point.
 
-For flank angle \(\theta\) measured from the horizontal underside, the horizontal undercut per side is:
+It states that the DSP-V preparation works with all 5th Axis vises. It also says C is the most critical dimension and that A/B vary with stock size. The 75% dovetail-width note is a recommendation, not an absolute rule.
+
+## Cross-section
+
+The profile is a **male dovetail tongue** projecting below the stock's locating plane. It is not a trapezoidal pocket cut upward into the blank.
+
+Use the locating plane as Y=0 and positive Y into the stock. The dovetail toe extends in negative Y by C.
+
+Let:
+- W = stock width.
+- fL / fR = left/right locating-flat lengths.
+- d = dovetail depth C.
+- theta = flank angle measured from the locating plane.
+- u = horizontal toe expansion on each side.
+
+The initial parametric relationship is:
 
 \[
 u = \frac{d}{\tan(\theta)}
 \]
 
-The mouth width is:
+The two upper flank endpoints are:
 
 \[
-w_m = W - f_L - f_R
+x_{mouth,L}=f_L,\quad x_{mouth,R}=W-f_R
 \]
 
-The upper relief width is:
+The lower toe endpoints are:
 
 \[
-w_t = w_m + 2u
+x_{toe,L}=f_L-u,\quad x_{toe,R}=W-f_R+u
 \]
 
-The generator rejects a profile if the two flanks overlap. It does not silently shrink the dovetail or alter the locating flats.
+The generator requires each toe endpoint to remain within the stock's outside width. This prevents the dovetail from overhanging beyond the locating flats. The eight points are ordered counter-clockwise, starting at the lower-left stock corner and walking across the underside, up the right side, and back across the top.
 
-## Important limitations
+For a symmetric 2.000 in wide blank using 0.250 in locating flats, 0.080 in depth, and 45-degree flanks, the generated cross-section has:
+- mouth width = 1.500 in.
+- toe expansion = 0.080 in per side.
+- toe width = 1.660 in.
+- toe depth = 0.080 in below the locating plane.
 
-- This is a parametric geometry primitive, not a fully drawing-conformed DSP-V profile. The DSP-V drawing's exact dimension-C relationship and point/edge-break treatment still need mapping.
-- The current boundary has sharp vertices. The DSP-V edge-break limit is validated as an input but the edge-break geometry is not yet applied.
-- No production-generation flag is enabled by this file. The geometry still needs automated polygon closure/orientation/self-intersection tests, then native Mastercam B-rep creation and in-app verification.
-- The DSP-V 75% recommendation must be checked against the drawing-defined dovetail width once its datum is mapped; do not substitute an inferred ratio without confirming that definition.
+These are geometry calculations from those inputs, not additional manufacturer-specified dimensions.
 
-## Basic geometry checks required before production use
+## Implementation status
 
-1. Exactly eight finite boundary points.
-2. First and last edge close by construction.
-3. Positive stock width and height.
-4. Left and right locating flats meet the drawing minimum.
-5. Flank angle strictly between 0 and 90 degrees.
-6. Both undercut flanks fit without crossing.
-7. Polygon has nonzero area and no self-intersection.
-8. Edge-break geometry is present and bounded by the drawing maximum.
-9. Profile dimensions and unit are retained with drawing provenance.
+The core now generates this male-tongue orientation and checks finite coordinates, flank fit, and positive polygon area. Automated tests assert the point coordinates, depth/angle calculation, metric-unit behavior, invalid dimensions, and toe-overhang rejection.
 
-The current code addresses the explicit input checks and flank-overlap check. The remaining checks are not claimed complete.
+## Still blocked from production
+
+- Apply the specified 0.010 in maximum edge break as actual geometry at the dovetail point.
+- Verify the detailed contact/relief interpretation against all profile views and the actual cutter geometry before releasing a machining profile.
+- Check the drawing's 75% width recommendation using the drawing-defined dovetail width.
+- Add polygon simplicity/solid validity tests and native Mastercam solid tests.
+- Verify the resulting B-rep in Mastercam 2027.
+
+The generated outline remains a development geometry primitive; it is not production-authorized.
