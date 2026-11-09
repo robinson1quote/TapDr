@@ -30,10 +30,14 @@ public sealed class ViseDovetailProfileGeneratorTests
 
         Assert.Equal(8, profile.Boundary.Count);
         Assert.Equal(new ProfilePoint2D(0, 0), profile.Boundary[0]);
-        Assert.Equal(new ProfilePoint2D(0.250, 0), profile.Boundary[1]);
-        Assert.Equal(new ProfilePoint2D(0.170, -0.080), profile.Boundary[2]);
-        Assert.Equal(new ProfilePoint2D(1.830, -0.080), profile.Boundary[3]);
-        Assert.Equal(new ProfilePoint2D(1.750, 0), profile.Boundary[4]);
+        Assert.Equal(0.250, profile.Boundary[1].X, 10);
+        Assert.Equal(0.0, profile.Boundary[1].Y, 10);
+        Assert.Equal(0.170, profile.Boundary[2].X, 10);
+        Assert.Equal(-0.080, profile.Boundary[2].Y, 10);
+        Assert.Equal(1.830, profile.Boundary[3].X, 10);
+        Assert.Equal(-0.080, profile.Boundary[3].Y, 10);
+        Assert.Equal(1.750, profile.Boundary[4].X, 10);
+        Assert.Equal(0.0, profile.Boundary[4].Y, 10);
         Assert.Equal(new ProfilePoint2D(2.0, 0), profile.Boundary[5]);
         Assert.Equal(new ProfilePoint2D(2.0, 1.0), profile.Boundary[6]);
         Assert.Equal(new ProfilePoint2D(0, 1.0), profile.Boundary[7]);
