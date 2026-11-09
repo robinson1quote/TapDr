@@ -45,7 +45,6 @@ public sealed record ViseStockPrepValidation(
 
 public static class ViseStockPrepValidator
 {
-    // Manufacturer DSP-V Rev A hard limits and advisory, stored in inches.
     private const double MinimumFlatInches = 0.250;
     private const double NominalDepthInches = 0.080;
     private const double MaximumEdgeBreakInches = 0.010;
@@ -55,12 +54,26 @@ public static class ViseStockPrepValidator
         ArgumentNullException.ThrowIfNull(p);
         var issues = new List<ValidationIssue>();
 
+        if (!Enum.IsDefined(p.Unit))
+            Error("INPUT-UNIT", "The selected length unit is not supported.");
+
         CheckPositive(p.StockLength, nameof(p.StockLength));
         CheckPositive(p.StockWidth, nameof(p.StockWidth));
         CheckPositive(p.StockHeight, nameof(p.StockHeight));
         CheckPositive(p.DovetailDepth, nameof(p.DovetailDepth));
         CheckPositive(p.LeftLocatingFlat, nameof(p.LeftLocatingFlat));
         CheckPositive(p.RightLocatingFlat, nameof(p.RightLocatingFlat));
+
+        if (!double.IsFinite(p.FlankAngleDegrees) ||
+            p.FlankAngleDegrees <= 0 || p.FlankAngleDegrees >= 90)
+            Error("VISE-ANGLE", "Flank angle must be finite, greater than 0 and less than 90 degrees.");
+
+        if (!double.IsFinite(p.MaximumEdgeBreak) ||
+            p.MaximumEdgeBreak < 0)
+            Error("VISE-EDGE-BREAK", "Edge break must be a finite, non-negative value.");
+
+        if (!Enum.IsDefined(p.Unit))
+            return new ViseStockPrepValidation(issues);
 
         var minFlat = LengthUnits.Convert(MinimumFlatInches, LengthUnit.Inch, p.Unit);
         var nominalDepth = LengthUnits.Convert(NominalDepthInches, LengthUnit.Inch, p.Unit);
@@ -70,23 +83,15 @@ public static class ViseStockPrepValidator
             Error("VISE-FLAT-L", $"Left locating flat must be at least {minFlat:G6} {p.Unit}.");
         if (p.RightLocatingFlat < minFlat)
             Error("VISE-FLAT-R", $"Right locating flat must be at least {minFlat:G6} {p.Unit}.");
-        if (p.DovetailDepth <= 0)
-            Error("VISE-DEPTH", "Dovetail depth must be greater than zero.");
         if (p.DovetailDepth > p.StockHeight)
             Error("VISE-DEPTH-STOCK", "Dovetail depth cannot exceed stock height.");
-        if (p.FlankAngleDegrees <= 0 || p.FlankAngleDegrees >= 90)
-            Error("VISE-ANGLE", "Flank angle must be greater than 0 and less than 90 degrees.");
-        if (p.MaximumEdgeBreak < 0 || p.MaximumEdgeBreak > maxEdge)
-            Error("VISE-EDGE-BREAK", $"Edge break must be between 0 and {maxEdge:G6} {p.Unit}.");
+        if (double.IsFinite(p.MaximumEdgeBreak) && p.MaximumEdgeBreak > maxEdge)
+            Error("VISE-EDGE-BREAK-LIMIT", $"Edge break cannot exceed {maxEdge:G6} {p.Unit}.");
         if (p.DovetailDepth > nominalDepth)
             Warning("VISE-DEPTH-NONSTANDARD", $"Entered depth exceeds the DSP-V nominal {nominalDepth:G6} {p.Unit}; verify the setup before machining.");
 
-        var requiredWidth = p.LeftLocatingFlat + p.RightLocatingFlat;
-        if (p.StockWidth <= requiredWidth)
+        if (p.StockWidth <= p.LeftLocatingFlat + p.RightLocatingFlat)
             Error("VISE-FLATS-WIDTH", "Stock width must exceed the combined locating-flat widths.");
-        // DSP-V's 75% note is advisory. It must be evaluated against the final
-        // drawing-defined dovetail span, not an inferred span from stock width
-        // and locating flats. The profile geometry stage will add that check.
 
         return new ViseStockPrepValidation(issues);
 
