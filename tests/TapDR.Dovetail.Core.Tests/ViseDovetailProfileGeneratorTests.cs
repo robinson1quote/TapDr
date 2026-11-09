@@ -24,35 +24,43 @@ public sealed class ViseDovetailProfileGeneratorTests
         };
 
     [Fact]
-    public void Generate_ReturnsClosedEightVertexBoundary()
+    public void Generate_ReturnsEightVertexMaleTongueBelowLocatingPlane()
     {
         var profile = ViseDovetailProfileGenerator.Generate(ValidParameters());
 
         Assert.Equal(8, profile.Boundary.Count);
         Assert.Equal(new ProfilePoint2D(0, 0), profile.Boundary[0]);
-        Assert.Equal(new ProfilePoint2D(0, 1.0), profile.Boundary[^1]);
+        Assert.Equal(new ProfilePoint2D(0.250, 0), profile.Boundary[1]);
+        Assert.Equal(new ProfilePoint2D(0.170, -0.080), profile.Boundary[2]);
+        Assert.Equal(new ProfilePoint2D(1.830, -0.080), profile.Boundary[3]);
+        Assert.Equal(new ProfilePoint2D(1.750, 0), profile.Boundary[4]);
+        Assert.Equal(new ProfilePoint2D(2.0, 0), profile.Boundary[5]);
+        Assert.Equal(new ProfilePoint2D(2.0, 1.0), profile.Boundary[6]);
+        Assert.Equal(new ProfilePoint2D(0, 1.0), profile.Boundary[7]);
         Assert.Equal(0.080, profile.UndercutPerSide, 10);
+        Assert.Equal(1.660, profile.ToeWidth, 10);
+        Assert.True(profile.SignedArea > 0);
         Assert.False(profile.IsProductionReady);
     }
 
     [Fact]
-    public void Generate_UsesDepthAndAngleToCalculateUndercut()
+    public void Generate_UsesDepthAndAngleToCalculateToeExpansion()
     {
         var profile = ViseDovetailProfileGenerator.Generate(
             ValidParameters(depth: 0.100, angle: 30.0));
 
         var expected = 0.100 / Math.Tan(Math.PI / 6.0);
         Assert.Equal(expected, profile.UndercutPerSide, 10);
+        Assert.Equal(1.5 + 2 * expected, profile.ToeWidth, 10);
     }
 
     [Fact]
-    public void Generate_RejectsOverlappingFlanks()
+    public void Generate_RejectsToeThatExtendsBeyondLocatingFlats()
     {
-        // Mouth is 0.15 in; each 45-degree flank consumes 0.08 in.
         var ex = Assert.Throws<ArgumentException>(() =>
-            ViseDovetailProfileGenerator.Generate(ValidParameters(width: 0.65)));
+            ViseDovetailProfileGenerator.Generate(ValidParameters(depth: 0.300)));
 
-        Assert.Contains("flanks overlap", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("extends beyond a locating flat", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -80,5 +88,28 @@ public sealed class ViseDovetailProfileGeneratorTests
 
         Assert.Throws<ArgumentException>(() =>
             ViseDovetailProfileGenerator.Generate(p));
+    }
+
+    [Fact]
+    public void Generate_PreservesMetricUnits()
+    {
+        var p = new ViseStockPrepParameters
+        {
+            StockLength = 101.6,
+            StockWidth = 50.8,
+            StockHeight = 25.4,
+            Unit = LengthUnit.Millimeter,
+            DovetailDepth = 2.032,
+            LeftLocatingFlat = 6.35,
+            RightLocatingFlat = 6.35,
+            FlankAngleDegrees = 45.0,
+            MaximumEdgeBreak = 0.254
+        };
+
+        var profile = ViseDovetailProfileGenerator.Generate(p);
+
+        Assert.Equal(2.032, profile.UndercutPerSide, 10);
+        Assert.Equal(4.064, profile.ToeWidth - profile.MouthWidth, 10);
+        Assert.Equal(-2.032, profile.Boundary[2].Y, 10);
     }
 }
