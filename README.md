@@ -4,7 +4,7 @@ A Mastercam 2027 add-in for creating native, editable 5th Axis vise stock-prep a
 
 ## Scope
 
-- Mastercam 2027 / .NET 10 add-in.
+- Mastercam 2027 add-in; the standalone geometry core currently targets .NET 10. The exact Mastercam adapter target framework must be checked against the installed 2027 assemblies before project wiring.
 - Native editable solid geometry in the active Mastercam part file. Mesh output is not the primary workflow.
 - Separate geometry families for **vise stock preparation** and **fixture mounting dovetails**. They must never share an assumed profile.
 - Revision-controlled, manufacturer-drawing-backed profiles. A profile without verified dimensions and revision metadata is blocked from production generation.
@@ -33,7 +33,8 @@ The core geometry engine will report the width ratio as a validation advisory. I
 
 - [x] Project scope and hardware boundaries recorded.
 - [x] Manufacturer DSP-V dimensions and validation rules recorded.
-- [ ] Pure geometry core implementation and unit tests.
+- [x] Initial standalone geometry core: unit conversion, parameter model, hard-limit validation, and drawing provenance metadata.
+- [ ] Exact cross-section coordinate model and geometry tests.
 - [ ] Mastercam 2027 native geometry adapter.
 - [ ] In-Mastercam preview and parameter UI.
 - [ ] Revisioned fixture-profile catalog from exact manufacturer drawings.
@@ -43,4 +44,4 @@ The core geometry engine will report the width ratio as a validation advisory. I
 
 ## Build target
 
-Mastercam 2027 uses .NET 10 for add-ins. The independent geometry core targets .NET 10; the Mastercam adapter will bind to the assemblies installed with Mastercam 2027.
+The independent geometry core targets .NET 10. The Mastercam add-in target framework remains an explicit verification gate; do not infer it from forum posts or another Mastercam release. The adapter will bind to the assemblies installed with Mastercam 2027.
