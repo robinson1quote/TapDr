@@ -1,0 +1,33 @@
+name: .NET core validation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - ".github/workflows/dotnet-core.yml"
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - ".github/workflows/dotnet-core.yml"
+  workflow_dispatch:
+
+jobs:
+  core-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Install .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore
+        run: dotnet restore tests/TapDR.Dovetail.Core.Tests/TapDR.Dovetail.Core.Tests.csproj
+      - name: Build
+        run: dotnet build tests/TapDR.Dovetail.Core.Tests/TapDR.Dovetail.Core.Tests.csproj --configuration Release --no-restore
+      - name: Test
+        run: dotnet test tests/TapDR.Dovetail.Core.Tests/TapDR.Dovetail.Core.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=core-tests.trx"
