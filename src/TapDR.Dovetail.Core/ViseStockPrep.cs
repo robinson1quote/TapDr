@@ -49,7 +49,6 @@ public static class ViseStockPrepValidator
     private const double MinimumFlatInches = 0.250;
     private const double NominalDepthInches = 0.080;
     private const double MaximumEdgeBreakInches = 0.010;
-    private const double RecommendedWidthRatio = 0.75;
 
     public static ViseStockPrepValidation Validate(ViseStockPrepParameters p)
     {
@@ -85,14 +84,9 @@ public static class ViseStockPrepValidator
         var requiredWidth = p.LeftLocatingFlat + p.RightLocatingFlat;
         if (p.StockWidth <= requiredWidth)
             Error("VISE-FLATS-WIDTH", "Stock width must exceed the combined locating-flat widths.");
-        else
-        {
-            // The DSP-V 75% note is guidance, not a hard rejection rule.
-            var available = p.StockWidth - requiredWidth;
-            var ratio = available / p.StockWidth;
-            if (ratio < RecommendedWidthRatio)
-                Warning("VISE-WIDTH-RATIO", $"The available dovetail span is {ratio:P1} of stock width; DSP-V recommends at least 75%. This is advisory only.");
-        }
+        // DSP-V's 75% note is advisory. It must be evaluated against the final
+        // drawing-defined dovetail span, not an inferred span from stock width
+        // and locating flats. The profile geometry stage will add that check.
 
         return new ViseStockPrepValidation(issues);
 
