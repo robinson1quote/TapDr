@@ -79,6 +79,33 @@ public sealed class ViseDovetailProfileGeneratorTests
     }
 
     [Fact]
+    public void Validator_WarnsWhenDepthIsOutsideDrawingTolerance()
+    {
+        var validation = ViseStockPrepValidator.Validate(ValidParameters(depth: 0.070));
+
+        Assert.True(validation.CanGenerate);
+        Assert.Contains(validation.Issues, issue => issue.Code == "VISE-DEPTH-NONSTANDARD");
+    }
+
+    [Fact]
+    public void Validator_WarnsWhenFlankAngleIsOutsideDrawingTolerance()
+    {
+        var validation = ViseStockPrepValidator.Validate(ValidParameters(angle: 44.0));
+
+        Assert.True(validation.CanGenerate);
+        Assert.Contains(validation.Issues, issue => issue.Code == "VISE-ANGLE-NONSTANDARD");
+    }
+
+    [Fact]
+    public void Validator_WarnsWhenToeEdgeBreakIsOmitted()
+    {
+        var validation = ViseStockPrepValidator.Validate(ValidParameters(edgeBreak: 0));
+
+        Assert.True(validation.CanGenerate);
+        Assert.Contains(validation.Issues, issue => issue.Code == "VISE-EDGE-BREAK-OMITTED");
+    }
+
+    [Fact]
     public void Generate_UsesDepthAndAngleToCalculateUndercut()
     {
         var profile = ViseDovetailProfileGenerator.Generate(
