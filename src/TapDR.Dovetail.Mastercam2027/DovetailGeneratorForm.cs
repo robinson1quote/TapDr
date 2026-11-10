@@ -13,11 +13,11 @@ internal sealed class DovetailGeneratorForm : Form
     private readonly TextBox _length = Input("4.000");
     private readonly TextBox _width = Input("2.000");
     private readonly TextBox _height = Input("1.000");
-    private readonly TextBox _depth = Input("0.080");
+    private readonly TextBox _depth = Input("0.080") { ReadOnly = true };
     private readonly TextBox _leftFlat = Input("0.250");
     private readonly TextBox _rightFlat = Input("0.250");
-    private readonly TextBox _angle = Input("45.0");
-    private readonly TextBox _edgeBreak = Input("0.010");
+    private readonly TextBox _angle = Input("45.0") { ReadOnly = true };
+    private readonly TextBox _edgeBreak = Input("0.010") { ReadOnly = true };
     private readonly TextBox _offsetX = Input("0");
     private readonly TextBox _offsetY = Input("0");
     private readonly TextBox _offsetZ = Input("0");
@@ -119,11 +119,11 @@ internal sealed class DovetailGeneratorForm : Form
         leftStack.Controls.Add(stockGroup);
 
         var profileGroup = _profileGroup = MakeGroup("DSP-V DOVETAIL PROFILE", 5, 430);
-        AddRow(profileGroup, 0, "Dovetail depth", _depth);
+        AddRow(profileGroup, 0, "Dovetail depth (fixed)", _depth);
         AddRow(profileGroup, 1, "Left locating flat", _leftFlat);
         AddRow(profileGroup, 2, "Right locating flat", _rightFlat);
-        AddRow(profileGroup, 3, "Flank angle (degrees)", _angle);
-        AddRow(profileGroup, 4, "Toe edge break (max 0.010)", _edgeBreak);
+        AddRow(profileGroup, 3, "Flank angle (fixed)", _angle);
+        AddRow(profileGroup, 4, "Toe edge break (fixed max)", _edgeBreak);
         leftStack.Controls.Add(profileGroup);
 
         var placementGroup = MakeGroup("PLACEMENT IN MASTERCAM", 4, 430);
