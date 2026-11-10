@@ -48,6 +48,7 @@ public static class ViseStockPrepValidator
     private const double MinimumFlatInches = 0.250;
     private const double NominalDepthInches = 0.080;
     private const double MaximumEdgeBreakInches = 0.010;
+    private const double RecommendedDovetailWidthRatio = 0.75;
 
     public static ViseStockPrepValidation Validate(ViseStockPrepParameters p)
     {
@@ -83,34 +84,53 @@ public static class ViseStockPrepValidator
             Error("VISE-FLAT-L", $"Left locating flat must be at least {minFlat:G6} {p.Unit}.");
         if (p.RightLocatingFlat < minFlat)
             Error("VISE-FLAT-R", $"Right locating flat must be at least {minFlat:G6} {p.Unit}.");
-        if (p.DovetailDepth >= p.StockHeight)
-            Error("VISE-DEPTH-STOCK", "Dovetail depth must be less than stock height so the stock retains a top web.");
+        if (p.DovetailDepth > p.StockHeight)
+            Error("VISE-DEPTH-STOCK", "Dovetail depth cannot exceed stock height.");
         if (double.IsFinite(p.MaximumEdgeBreak) && p.MaximumEdgeBreak > maxEdge)
             Error("VISE-EDGE-BREAK-LIMIT", $"Edge break cannot exceed {maxEdge:G6} {p.Unit}.");
         if (p.DovetailDepth > nominalDepth)
             Warning("VISE-DEPTH-NONSTANDARD", $"Entered depth exceeds the DSP-V nominal {nominalDepth:G6} {p.Unit}; verify the setup before machining.");
 
-        if (p.StockWidth <= p.LeftLocatingFlat + p.RightLocatingFlat)
-            Error("VISE-FLATS-WIDTH", "Stock width must exceed the combined locating-flat widths.");
-
-        // The DSP-V 75% note concerns the actual lower locating-surface width,
-        // not the mouth span between the upper flank starts.
-        if (double.IsFinite(p.StockWidth) && p.StockWidth > 0 &&
+        var hasBasicGeometry =
+            double.IsFinite(p.StockWidth) && p.StockWidth > 0 &&
             double.IsFinite(p.DovetailDepth) && p.DovetailDepth > 0 &&
             double.IsFinite(p.LeftLocatingFlat) && p.LeftLocatingFlat > 0 &&
             double.IsFinite(p.RightLocatingFlat) && p.RightLocatingFlat > 0 &&
             double.IsFinite(p.FlankAngleDegrees) &&
-            p.FlankAngleDegrees > 0 && p.FlankAngleDegrees < 90)
-        {
-            var undercut = p.DovetailDepth /
-                           Math.Tan(p.FlankAngleDegrees * Math.PI / 180.0);
-            var locatingWidth = p.StockWidth - p.LeftLocatingFlat -
-                                p.RightLocatingFlat + 2.0 * undercut;
-            var ratio = locatingWidth / p.StockWidth;
+            p.FlankAngleDegrees > 0 && p.FlankAngleDegrees < 90;
 
-            if (double.IsFinite(ratio) && ratio < 0.75)
-                Warning("VISE-WIDTH-RATIO",
-                    $"Calculated dovetail locating width is {ratio:P1} of stock width; DSP-V recommends at least 75%. This is advisory only.");
+        if (hasBasicGeometry)
+        {
+            if (p.StockWidth <= p.LeftLocatingFlat + p.RightLocatingFlat)
+            {
+                Error("VISE-FLATS-WIDTH", "Stock width must exceed the combined locating-flat widths.");
+            }
+            else
+            {
+                var horizontalUndercut =
+                    p.DovetailDepth / Math.Tan(p.FlankAngleDegrees * Math.PI / 180.0);
+
+                if (!double.IsFinite(horizontalUndercut) ||
+                    horizontalUndercut >= p.LeftLocatingFlat ||
+                    horizontalUndercut >= p.RightLocatingFlat)
+                {
+                    Error("VISE-UNDERCUT-FLAT",
+                        "The dovetail undercut must be smaller than both locating-flat lengths.");
+                }
+                else
+                {
+                    // The groove widens toward its deeper floor. This is the
+                    // drawing-defined dovetail width used for the 75% advisory.
+                    var dovetailWidth =
+                        p.StockWidth - p.LeftLocatingFlat - p.RightLocatingFlat
+                        + 2.0 * horizontalUndercut;
+                    var ratio = dovetailWidth / p.StockWidth;
+
+                    if (ratio < RecommendedDovetailWidthRatio)
+                        Warning("VISE-WIDTH-RATIO",
+                            $"The calculated dovetail width is {ratio:P1} of stock width; DSP-V recommends at least 75%. This is advisory only.");
+                }
+            }
         }
 
         return new ViseStockPrepValidation(issues);
