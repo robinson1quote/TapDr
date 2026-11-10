@@ -52,7 +52,7 @@ public static class FixtureStockPrepCatalog
             Metadata = Metadata("DSP-D05125", "D05125", "DSP-D05125", "A", "https://5thaxis.com/wp-content/uploads/2021/04/D05125-Dovetail-Stock-Preparation-2022.pdf"),
             FixtureModel = "D05125",
             SlotDepthInches = 0.080,
-            GaugePinDiameterInches = null,
+            GaugePinDiameterInches = 0.0625,
             MaximumInternalRadiusInches = 0.015,
             MaximumEdgeBreakInches = 0.010,
             UnmappedDrawingCallouts = [".413", ".207", ".1260 ± .0005", ".150 ± .020", ".100 programming dimension", ".066 +.000 / -.050 programming dimension", ".003 +.000 / -.050 programming dimension"]
