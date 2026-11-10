@@ -1,5 +1,7 @@
+using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
+using System.Windows.Forms;
 using TapDR.Dovetail.Core;
 
 namespace TapDR.Dovetail.Mastercam2027;
@@ -125,7 +127,7 @@ internal sealed class DovetailGeneratorForm : Form
             FlowDirection = FlowDirection.TopDown,
             WrapContents = false,
             AutoSize = true,
-            Width = 470,
+            Width = 410,
             Padding = new Padding(6, 2, 6, 4)
         };
         checkPanel.Controls.Add(_centerX);
@@ -442,7 +444,6 @@ internal sealed class CrossSectionPreviewPanel : Panel
         }
 
         var lengthInches = LengthUnits.Convert(StockLength, InputUnit, LengthUnit.Inch);
-        var widthInches = LengthUnits.Convert(Profile.StockWidth, InputUnit, LengthUnit.Inch);
         var scaleToInches = LengthUnits.Convert(1, InputUnit, LengthUnit.Inch);
 
         var section = Profile.Boundary
@@ -464,7 +465,7 @@ internal sealed class CrossSectionPreviewPanel : Panel
         var availableWidth = Math.Max(ClientSize.Width - 72, 80);
         var availableHeight = Math.Max(ClientSize.Height - 86, 80);
         var scale = Math.Min(availableWidth / rangeX, availableHeight / rangeY);
-        scale = Math.Max(0.5F, scale);
+        scale = Math.Max(0.01F, scale);
 
         var centerX = ClientSize.Width / 2F;
         var centerY = ClientSize.Height / 2F + 3;
