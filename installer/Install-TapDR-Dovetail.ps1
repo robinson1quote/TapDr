@@ -49,7 +49,7 @@ try {
 
     Write-Host ""
     Write-Host "[2/3] Building Mastercam 2027 NET-Hook..." -ForegroundColor Yellow
-    & dotnet build $AdapterProject --configuration Release --arch x64 -p:MastercamInstallDir="$MastercamInstallDir" --verbosity minimal
+    & dotnet build $AdapterProject --configuration Release -p:MastercamInstallDir="$MastercamInstallDir" --verbosity minimal
     if ($LASTEXITCODE -ne 0) { throw "Mastercam add-in build failed. Nothing was installed." }
 
     $AdapterDll = Join-Path $AdapterOutput "TapDR.Dovetail.Mastercam2027.dll"
