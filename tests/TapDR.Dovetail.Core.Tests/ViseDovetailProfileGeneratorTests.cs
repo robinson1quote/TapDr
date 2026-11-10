@@ -79,6 +79,33 @@ public sealed class ViseDovetailProfileGeneratorTests
     }
 
     [Fact]
+    public void Validator_DoesNotWarnAtExactDepthToleranceBoundary()
+    {
+        var validation = ViseStockPrepValidator.Validate(ValidParameters(depth: 0.085));
+
+        Assert.True(validation.CanGenerate);
+        Assert.DoesNotContain(validation.Issues, issue => issue.Code == "VISE-DEPTH-NONSTANDARD");
+    }
+
+    [Fact]
+    public void Validator_DoesNotWarnAtExactFlankAngleToleranceBoundary()
+    {
+        var validation = ViseStockPrepValidator.Validate(ValidParameters(angle: 45.5));
+
+        Assert.True(validation.CanGenerate);
+        Assert.DoesNotContain(validation.Issues, issue => issue.Code == "VISE-ANGLE-NONSTANDARD");
+    }
+
+    [Fact]
+    public void Validator_DefaultDrawingDimensionsHaveNoWarnings()
+    {
+        var validation = ViseStockPrepValidator.Validate(ValidParameters());
+
+        Assert.True(validation.CanGenerate);
+        Assert.False(validation.HasWarnings);
+    }
+
+    [Fact]
     public void Validator_WarnsWhenDepthIsOutsideDrawingTolerance()
     {
         var validation = ViseStockPrepValidator.Validate(ValidParameters(depth: 0.070));
