@@ -18,9 +18,5 @@
       <HintPath>$(MastercamInstallDir)\NETHook3_0.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="ModelessDialogTabHandler">
-      <HintPath>$(MastercamInstallDir)\ModelessDialogTabHandler.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
   </ItemGroup>
 </Project>
