@@ -9,9 +9,11 @@ The common 5th Axis DSP-V Rev A drawing shows:
 - 45-degree dovetail cut surfaces.
 - 0.010 in maximum edge break at the dovetail point.
 
-The drawing states it applies to all 5th Axis vises. It identifies C as the most critical dimension and says A/B change with stock size. Its 75% dovetail-width guidance is explicitly a recommendation, not an absolute rule.
+The drawing states it applies to all 5th Axis vises. It identifies C as the most critical dimension and says A/B change with stock size. Its 75% dovetail-width guidance is explicitly a recommendation, not an absolute rule. The B callout is the horizontal minimum flat length from each outside stock edge to the start of its dovetail flank. The separate drawing note tells the programmer to locate the cutter from the part centerline using B; that CNC cutter-location instruction is not part of this solid generator.
 
 ## Coordinate convention and parametric section
+
+In Mastercam machine coordinates the profile width maps to Y, stock height maps to vertical Z, and stock length extrudes along X. This keeps the blank in the normal Z-up machine orientation.
 
 The generator represents the stock inside its raw rectangular envelope:
 - X = 0 to stock width W.
@@ -33,6 +35,8 @@ The flank relationship is:
 
 `u = d / tan(theta)`
 
+The full dovetail locating-face width is `D = W - fL - fR + 2u`. The DSP-V 75% advisory is evaluated as `D / W`; it generates a warning only and never rejects or silently alters the part.
+
 The unchamfered flank starts are `xL=fL` and `xR=W-fR`; the toe endpoints are `xToeL=fL-u` and `xToeR=W-fR+u`.
 
 For nonzero b, each of the two lower toe corners is chamfered by distance b measured along both adjacent profile edges. The toe bevel must fit within both flank segments and the locating face. The default 0.010 in edge break is therefore part of the generated section, not merely a displayed parameter. Setting b to zero intentionally leaves sharp toe corners.
@@ -45,13 +49,12 @@ For a 2.000 in wide blank with 0.250 in locating flats, 0.080 in depth, 45-degre
 - Generate a counter-clockwise, read-only boundary.
 - Regression tests assert the ten-point edge-broken profile, the sharp-edge zero-break option, depth/angle relationship, stock envelope, orientation, and rejection cases.
 
-The test source is committed, but no passing test run is claimed until the GitHub workflow or Windows installer reports success.
+The test source is committed for exact profile points, actual dovetail width and the 75% advisory. No passing test run is claimed until the GitHub workflow reports success.
 
 ## Remaining production-release gates
 
-- Map the drawing's B cutter/programming datum exactly; do not assume the calculated toe span is a substitute for that toolpath datum.
+- Keep the DSP-V cutter-centerline instruction separate from stock-solid construction; the generator does not create a cutter path.
 - Verify the exact edge-break interpretation and all contact surfaces against the manufacturer's drawing and cutter geometry.
-- Check the 75% recommendation against the drawing-defined dovetail-width definition.
 - Add polygon self-intersection and native-solid validity tests.
 - Build and verify the resulting B-rep inside Mastercam 2027.
 
