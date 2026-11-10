@@ -6,15 +6,17 @@ namespace TapDR.Dovetail.Core.Tests;
 public sealed class FixtureStockPrepCatalogTests
 {
     [Theory]
-    [InlineData("D115", 0.080, 0.0625)]
-    [InlineData("D22", 0.150, 0.1250)]
-    [InlineData("D05125", 0.080, 0.0625)]
+    [InlineData("D115", 0.080, 0.2510, 0.0625)]
+    [InlineData("D22", 0.150, 0.2510, 0.1250)]
+    [InlineData("D05125", 0.080, 0.1260, 0.0625)]
     public void Catalog_ContainsDrawingBackedFixtureDimensions(
-        string model, double expectedDepth, double expectedGaugePin)
+        string model, double expectedDepth, double expectedSlotWidth, double expectedGaugePin)
     {
         var profile = FixtureStockPrepCatalog.GetByFixtureModel(model);
 
         Assert.Equal(expectedDepth, profile.SlotDepthInches, 10);
+        Assert.Equal(expectedSlotWidth, profile.SlotWidthInches, 10);
+        Assert.Equal(0.0005, profile.SlotWidthToleranceInches, 10);
         Assert.Equal(expectedGaugePin, profile.GaugePinDiameterInches!.Value, 10);
         Assert.Equal(45.0, profile.FlankAngleDegrees, 10);
         Assert.Equal(0.015, profile.MaximumInternalRadiusInches!.Value, 10);
