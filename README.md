@@ -63,7 +63,7 @@ The drawings also specify 45-degree flanks, 2 × R0.015 maximum inside radii, an
 
 ## Build configuration
 
-The geometry core targets .NET 10. The Mastercam adapter targets `net10.0-windows` and references the local Mastercam installation under `C:\Program Files\Mastercam 2027`. Mastercam's 2027 .NET 10 move is documented by Mastercam staff [here](https://www.emastercam.com/forums/topic/114704-mastercam-2027-moves-to-net-10/).
+The supplied Mastercam 2027 NET-Hook binary is x64, targets .NETCoreApp v10.0, and contains the documented `SolidExtrudeFromChain` method. The adapter targets `net10.0-windows` and references the local Mastercam installation under `C:\Program Files\Mastercam 2027`. The installer checks the on-machine `NETHook3_0.dll` for the .NET 10 target and solid-extrusion API before compiling or replacing an existing installation; it refuses an older .NET Framework 4.8 NET-Hook assembly.
 
 ## Windows build and installation
 
