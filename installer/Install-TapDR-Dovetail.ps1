@@ -104,6 +104,12 @@ catch {
     Write-Host ""
     Write-Host "BUILD / INSTALL FAILED" -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
+    if ($StagingDirectory -and (Test-Path $StagingDirectory)) {
+        Remove-Item -LiteralPath $StagingDirectory -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    if ($BackupPath -and (Test-Path $BackupPath) -and -not (Test-Path $InstallDirectory)) {
+        Move-Item -LiteralPath $BackupPath -Destination $InstallDirectory -ErrorAction SilentlyContinue
+    }
     Write-Host "Log: $LogPath"
     exit 1
 }
