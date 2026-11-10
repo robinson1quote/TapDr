@@ -294,7 +294,7 @@ internal sealed class DovetailGeneratorForm : Form
                 ? string.Join(" ", validation.Issues.Where(i => i.Severity == ValidationSeverity.Warning).Select(i => i.Message))
                 : "Preview checks passed. Verify the generated stock before machining; production validation is still pending.";
             _dimensionSummary.Text =
-                $"{Format(parameters.StockLength)} × {Format(parameters.StockWidth)} × {Format(parameters.StockHeight)} {UnitSuffix(parameters.Unit)}";
+                $"Raw blank {Format(parameters.StockLength)} × {Format(parameters.StockWidth)} × {Format(parameters.StockHeight)} {UnitSuffix(parameters.Unit)}; toe projects {Format(parameters.DovetailDepth)} {UnitSuffix(parameters.Unit)} below Z0.";
             _preview.Invalidate();
         }
         catch (Exception ex)
@@ -538,7 +538,7 @@ internal sealed class CrossSectionPreviewPanel : Panel
         using var metaFont = new Font("Segoe UI", 8.5F);
         TextRenderer.DrawText(g, "Live stock preview", titleFont,
             new Point(12, 12), Color.FromArgb(36, 55, 77));
-        var note = $"Length {StockLength:0.###} {UnitSuffix(InputUnit)}  |  Width {Profile.StockWidth:0.###} {UnitSuffix(InputUnit)}  |  Height {Profile.StockHeight:0.###} {UnitSuffix(InputUnit)}";
+        var note = $"Raw blank L {StockLength:0.###}  |  W {Profile.StockWidth:0.###}  |  H {Profile.StockHeight:0.###} {UnitSuffix(InputUnit)}  |  tongue extends {Profile.Depth:0.###} below Z0";
         TextRenderer.DrawText(g, note, metaFont,
             new Rectangle(12, ClientSize.Height - 28, ClientSize.Width - 24, 20),
             Color.FromArgb(94, 109, 127),
