@@ -20,6 +20,8 @@ public sealed record ViseDovetailCrossSection
     public double MouthWidth => StockWidth - LeftLocatingFlat - RightLocatingFlat;
     public double UndercutPerSide => Depth / Math.Tan(FlankAngleDegrees * Math.PI / 180.0);
     public double MaximumDovetailWidth => MouthWidth + 2 * UndercutPerSide;
+    public double DovetailWidth => MaximumDovetailWidth;
+    public double DovetailWidthRatio => StockWidth > 0 ? DovetailWidth / StockWidth : 0;
     public bool IsProductionReady => false;
 }
 
