@@ -43,6 +43,8 @@ public sealed class ViseDovetailProfileGeneratorTests
         AssertPoint(points[9], 0.000, 1.000);
 
         Assert.Equal(0.080, profile.UndercutPerSide, 10);
+        Assert.Equal(1.660, profile.DovetailWidth, 10);
+        Assert.Equal(0.830, profile.DovetailWidthRatio, 10);
         Assert.Equal(0.160, profile.MaximumDovetailWidth - profile.MouthWidth, 10);
         Assert.Equal(0.010, profile.AppliedEdgeBreak, 10);
         Assert.False(profile.IsProductionReady);
@@ -64,6 +66,16 @@ public sealed class ViseDovetailProfileGeneratorTests
         Assert.Equal(0.0, profile.AppliedEdgeBreak);
         AssertPoint(profile.Boundary[2], 0.170, 0.000);
         AssertPoint(profile.Boundary[3], 1.830, 0.000);
+    }
+
+    [Fact]
+    public void Validator_WarnsWhenActualDovetailWidthIsBelowSeventyFivePercent()
+    {
+        var validation = ViseStockPrepValidator.Validate(ValidParameters(width: 1.2));
+
+        Assert.True(validation.CanGenerate);
+        Assert.True(validation.HasWarnings);
+        Assert.Contains(validation.Issues, issue => issue.Code == "VISE-WIDTH-RATIO");
     }
 
     [Fact]
