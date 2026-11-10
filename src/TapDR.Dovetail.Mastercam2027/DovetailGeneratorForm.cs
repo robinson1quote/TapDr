@@ -56,8 +56,8 @@ internal sealed class DovetailGeneratorForm : Form
             Padding = new Padding(14),
             BackColor = BackColor
         };
-        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 46));
-        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 54));
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 48));
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 52));
         Controls.Add(root);
 
         var left = new Panel { Dock = DockStyle.Fill, AutoScroll = true, BackColor = BackColor };
@@ -79,7 +79,7 @@ internal sealed class DovetailGeneratorForm : Form
             Font = new Font("Segoe UI Semibold", 15F, FontStyle.Bold),
             ForeColor = Color.FromArgb(22, 39, 63),
             AutoSize = false,
-            Width = 500,
+            Width = 430,
             Height = 34,
             TextAlign = ContentAlignment.MiddleLeft
         };
@@ -90,25 +90,25 @@ internal sealed class DovetailGeneratorForm : Form
             Text = "Create native, editable vise stock-prep geometry in the active Mastercam file.",
             ForeColor = Color.FromArgb(83, 99, 119),
             AutoSize = false,
-            Width = 500,
+            Width = 430,
             Height = 38
         };
         leftStack.Controls.Add(subtitle);
 
-        var hardwareGroup = MakeGroup("HARDWARE", 2, 500);
+        var hardwareGroup = MakeGroup("HARDWARE", 2, 430);
         ConfigureCombo(_hardware, ["V75100X — R96-V75100 adapter", "V562 — original 2-bolt vise", "V6105"]);
         ConfigureCombo(_units, ["Inch", "Millimeter"]);
         AddRow(hardwareGroup, 0, "Vise model", _hardware);
         AddRow(hardwareGroup, 1, "Input units", _units);
         leftStack.Controls.Add(hardwareGroup);
 
-        var stockGroup = MakeGroup("STOCK SIZE", 3, 500);
+        var stockGroup = MakeGroup("STOCK SIZE", 3, 430);
         AddRow(stockGroup, 0, "Length", _length);
         AddRow(stockGroup, 1, "Width", _width);
         AddRow(stockGroup, 2, "Height", _height);
         leftStack.Controls.Add(stockGroup);
 
-        var profileGroup = MakeGroup("DSP-V DOVETAIL PROFILE", 5, 500);
+        var profileGroup = MakeGroup("DSP-V DOVETAIL PROFILE", 5, 430);
         AddRow(profileGroup, 0, "Dovetail depth", _depth);
         AddRow(profileGroup, 1, "Left locating flat", _leftFlat);
         AddRow(profileGroup, 2, "Right locating flat", _rightFlat);
@@ -116,7 +116,7 @@ internal sealed class DovetailGeneratorForm : Form
         AddRow(profileGroup, 4, "Toe edge break (max 0.010)", _edgeBreak);
         leftStack.Controls.Add(profileGroup);
 
-        var placementGroup = MakeGroup("PLACEMENT IN MASTERcam", 3, 500);
+        var placementGroup = MakeGroup("PLACEMENT IN MASTERCAM", 4, 430);
         AddRow(placementGroup, 0, "Origin offset X", _offsetX);
         AddRow(placementGroup, 1, "Origin offset Y", _offsetY);
         AddRow(placementGroup, 2, "Origin offset Z", _offsetZ);
@@ -130,10 +130,10 @@ internal sealed class DovetailGeneratorForm : Form
         };
         checkPanel.Controls.Add(_centerX);
         checkPanel.Controls.Add(_centerZ);
-        placementGroup.Controls.Add(checkPanel, 0, 3);
-        placementGroup.SetColumnSpan(checkPanel, 2);
-        placementGroup.RowCount = 4;
-        placementGroup.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        var placementTable = (TableLayoutPanel)placementGroup.Tag!;
+        placementTable.Controls.Add(checkPanel, 0, 3);
+        placementTable.SetColumnSpan(checkPanel, 2);
+        placementTable.RowStyles[3].SizeType = SizeType.AutoSize;
         leftStack.Controls.Add(placementGroup);
 
         _unitLabel.Text = "Dimensions in inches";
@@ -144,13 +144,13 @@ internal sealed class DovetailGeneratorForm : Form
         _status.Text = "Enter stock dimensions to preview.";
         _status.ForeColor = Color.FromArgb(83, 99, 119);
         _status.AutoSize = false;
-        _status.Width = 500;
+        _status.Width = 430;
         _status.Height = 44;
         _status.Padding = new Padding(4, 8, 4, 4);
         leftStack.Controls.Add(_status);
 
         _generate.Text = "GENERATE NATIVE SOLID";
-        _generate.Width = 500;
+        _generate.Width = 430;
         _generate.Height = 46;
         _generate.FlatStyle = FlatStyle.Flat;
         _generate.FlatAppearance.BorderSize = 0;
@@ -267,6 +267,7 @@ internal sealed class DovetailGeneratorForm : Form
                 : "Profile valid. Ready to create the native Mastercam solid.";
             _dimensionSummary.Text =
                 $"{Format(parameters.StockLength)} × {Format(parameters.StockWidth)} × {Format(parameters.StockHeight)} {UnitSuffix(parameters.Unit)}";
+            _preview.Invalidate();
         }
         catch (Exception ex)
         {
@@ -276,6 +277,7 @@ internal sealed class DovetailGeneratorForm : Form
             _status.ForeColor = Color.FromArgb(170, 62, 58);
             _status.Text = ex.Message;
             _dimensionSummary.Text = "Correct the dimensions to preview the stock.";
+            _preview.Invalidate();
         }
     }
 
@@ -441,7 +443,6 @@ internal sealed class CrossSectionPreviewPanel : Panel
 
         var lengthInches = LengthUnits.Convert(StockLength, InputUnit, LengthUnit.Inch);
         var widthInches = LengthUnits.Convert(Profile.StockWidth, InputUnit, LengthUnit.Inch);
-        var heightInches = LengthUnits.Convert(Profile.StockHeight, InputUnit, LengthUnit.Inch);
         var scaleToInches = LengthUnits.Convert(1, InputUnit, LengthUnit.Inch);
 
         var section = Profile.Boundary
@@ -480,7 +481,6 @@ internal sealed class CrossSectionPreviewPanel : Panel
         using var sideBrush = new SolidBrush(Color.FromArgb(208, 218, 230));
         using var endBrush = new SolidBrush(Color.FromArgb(229, 235, 242));
         using var edgePen = new Pen(Color.FromArgb(47, 69, 94), 1.8F);
-        using var hiddenPen = new Pen(Color.FromArgb(138, 153, 171), 1.0F);
 
         for (var i = 0; i < front.Length; i++)
         {
