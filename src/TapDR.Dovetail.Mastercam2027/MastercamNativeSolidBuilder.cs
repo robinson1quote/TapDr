@@ -174,10 +174,12 @@ public static class MastercamNativeSolidBuilder
         var minY = points.Min(point => point.Y);
         var maxY = points.Max(point => point.Y);
         if (Math.Abs(minX) > tolerance ||
-            Math.Abs(minY) > tolerance ||
+            Math.Abs(minY + profile.Depth) > tolerance ||
             Math.Abs(maxX - profile.StockWidth) > tolerance ||
             Math.Abs(maxY - profile.StockHeight) > tolerance)
-            throw new ArgumentException("The profile boundary does not match its declared stock envelope.", nameof(profile));
+            throw new ArgumentException(
+                "The profile boundary must span the raw blank from Z=0 to stock height and the dovetail toe to -depth.",
+                nameof(profile));
 
         var twiceArea = 0.0;
         for (var i = 0; i < points.Count; i++)
