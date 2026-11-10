@@ -31,12 +31,32 @@ try {
     Write-Host "TapDR 5th Axis Stock Generator — Mastercam 2027" -ForegroundColor Cyan
     Write-Host "Checking build prerequisites..."
 
+    if (-not [Environment]::Is64BitOperatingSystem) {
+        throw "Mastercam 2027 requires a 64-bit Windows installation."
+    }
+
     foreach ($requiredFile in @("NETHook3_0.dll", "MCGeomSld.dll")) {
         $path = Join-Path $MastercamInstallDir $requiredFile
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
             throw "Required Mastercam 2027 file was not found: $path"
         }
     }
+
+    # Reject older .NET Framework NET-Hook assemblies. The 2027 API used by
+    # this add-in targets .NET 10 and must contain native solid extrusion.
+    $NetHookPath = Join-Path $MastercamInstallDir "NETHook3_0.dll"
+    $NetHookSignature = [System.Text.Encoding]::ASCII.GetString(
+        [System.IO.File]::ReadAllBytes($NetHookPath))
+    if ($NetHookSignature -notlike "*.NETCoreApp,Version=v10.0*") {
+        throw "The installed NETHook3_0.dll is not the Mastercam 2027 .NET 10 assembly. Check MastercamInstallDir; no files were installed."
+    }
+    if ($NetHookSignature -notlike "*SolidExtrudeFromChain*") {
+        throw "The installed NETHook3_0.dll does not expose SolidExtrudeFromChain. The required native solid API is missing; no files were installed."
+    }
+    if ($NetHookSignature -notlike "*Mastercam 2027*") {
+        throw "The selected NET-Hook assembly does not identify itself as Mastercam 2027; refusing to build against it."
+    }
+    Write-Host "Mastercam 2027 NET-Hook verified: .NET 10 and SolidExtrudeFromChain present." -ForegroundColor Green
     if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
         throw ".NET SDK command 'dotnet' was not found."
     }
