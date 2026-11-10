@@ -46,6 +46,17 @@ public sealed class FixtureStockPrepCatalogTests
     }
 
     [Fact]
+    public void FixtureProfilesRetainUnmappedCalloutsUntilCoordinatesAreResolved()
+    {
+        Assert.All(FixtureStockPrepCatalog.All, profile =>
+        {
+            Assert.NotEmpty(profile.UnmappedDrawingCallouts);
+            Assert.False(profile.CoordinateModelComplete);
+            Assert.False(profile.CanGenerateProductionGeometry);
+        });
+    }
+
+    [Fact]
     public void Catalog_ContainsOnlyTheThreeSelectedFixtureModels()
     {
         Assert.Equal(
