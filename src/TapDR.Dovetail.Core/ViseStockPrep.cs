@@ -47,6 +47,9 @@ public static class ViseStockPrepValidator
 {
     private const double MinimumFlatInches = 0.250;
     private const double NominalDepthInches = 0.080;
+    private const double DepthToleranceInches = 0.005;
+    private const double NominalFlankAngleDegrees = 45.0;
+    private const double FlankAngleToleranceDegrees = 0.5;
     private const double MaximumEdgeBreakInches = 0.010;
     private const double RecommendedDovetailWidthRatio = 0.75;
 
@@ -78,6 +81,7 @@ public static class ViseStockPrepValidator
 
         var minFlat = LengthUnits.Convert(MinimumFlatInches, LengthUnit.Inch, p.Unit);
         var nominalDepth = LengthUnits.Convert(NominalDepthInches, LengthUnit.Inch, p.Unit);
+        var depthTolerance = LengthUnits.Convert(DepthToleranceInches, LengthUnit.Inch, p.Unit);
         var maxEdge = LengthUnits.Convert(MaximumEdgeBreakInches, LengthUnit.Inch, p.Unit);
 
         if (p.LeftLocatingFlat < minFlat)
@@ -88,8 +92,19 @@ public static class ViseStockPrepValidator
             Error("VISE-DEPTH-STOCK", "Dovetail depth cannot exceed stock height.");
         if (double.IsFinite(p.MaximumEdgeBreak) && p.MaximumEdgeBreak > maxEdge)
             Error("VISE-EDGE-BREAK-LIMIT", $"Edge break cannot exceed {maxEdge:G6} {p.Unit}.");
-        if (p.DovetailDepth > nominalDepth)
-            Warning("VISE-DEPTH-NONSTANDARD", $"Entered depth exceeds the DSP-V nominal {nominalDepth:G6} {p.Unit}; verify the setup before machining.");
+        if (double.IsFinite(p.DovetailDepth) &&
+            Math.Abs(p.DovetailDepth - nominalDepth) > depthTolerance)
+            Warning("VISE-DEPTH-NONSTANDARD",
+                $"Depth differs from the DSP-V nominal {nominalDepth:G6} {p.Unit} by more than the drawing tolerance {depthTolerance:G6} {p.Unit}.");
+
+        if (double.IsFinite(p.FlankAngleDegrees) &&
+            Math.Abs(p.FlankAngleDegrees - NominalFlankAngleDegrees) > FlankAngleToleranceDegrees)
+            Warning("VISE-ANGLE-NONSTANDARD",
+                $"Flank angle differs from the DSP-V 45° nominal by more than the drawing tolerance of {FlankAngleToleranceDegrees:G3}°.");
+
+        if (p.MaximumEdgeBreak == 0)
+            Warning("VISE-EDGE-BREAK-OMITTED",
+                "The DSP-V drawing calls for an edge break on the dovetail point; none is currently applied.");
 
         var hasBasicGeometry =
             double.IsFinite(p.StockWidth) && p.StockWidth > 0 &&
