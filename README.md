@@ -36,11 +36,11 @@ The current section generator and native-solid adapter are development source, n
 
 The fixture catalog records the separate workpiece-blank profiles and confirmed drawing callouts:
 
-| Profile | Slot depth | Gauge pin |
-|---|---:|---:|
-| DSP-D115 | 0.080 in | 0.0625 in |
-| DSP-D22 | 0.150 in | 0.1250 in |
-| DSP-D05125 | 0.080 in | 0.0625 in |
+| Profile | Slot depth | Slot width | Gauge pin |
+|---|---:|---:|---:|
+| DSP-D115 | 0.080 in | 0.2510 ± 0.0005 in | 0.0625 in |
+| DSP-D22 | 0.150 in | 0.2510 ± 0.0005 in | 0.1250 in |
+| DSP-D05125 | 0.080 in | 0.1260 ± 0.0005 in | 0.0625 in |
 
 The drawings also specify 45-degree flanks, 2 × R0.015 maximum inside radii, and 2 × 0.010 in edge breaks. Positional/programming dimensions still need exact mapping to their drawing views before fixture geometry can be enabled. The fixture catalog remains separate from the 96 mm mounting interface.
 
