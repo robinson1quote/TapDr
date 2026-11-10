@@ -500,7 +500,7 @@ internal sealed class CrossSectionPreviewPanel : Panel
 
         using var titleFont = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
         using var metaFont = new Font("Segoe UI", 8.5F);
-        TextRenderer.DrawText(g, "Native solid preview", titleFont,
+        TextRenderer.DrawText(g, "Live stock preview", titleFont,
             new Point(12, 12), Color.FromArgb(36, 55, 77));
         var note = $"Length {StockLength:0.###} {UnitSuffix(InputUnit)}  |  Width {Profile.StockWidth:0.###} {UnitSuffix(InputUnit)}  |  Height {Profile.StockHeight:0.###} {UnitSuffix(InputUnit)}";
         TextRenderer.DrawText(g, note, metaFont,
