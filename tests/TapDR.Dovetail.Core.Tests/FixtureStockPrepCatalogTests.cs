@@ -25,6 +25,10 @@ public sealed class FixtureStockPrepCatalogTests
         Assert.Equal(0.015, profile.MaximumInternalRadiusInches!.Value, 10);
         Assert.Equal(0.010, profile.MaximumEdgeBreakInches!.Value, 10);
         Assert.Equal("A", profile.Metadata.Revision);
+        Assert.True(profile.DovetailWidthConstantWithDepth);
+        Assert.True(profile.SlotToCenterlineDimensionCritical);
+        Assert.True(profile.GaugePinMeasurementRequired);
+        Assert.False(profile.CoordinateModelComplete);
         Assert.False(profile.CanGenerateProductionGeometry);
     }
 
