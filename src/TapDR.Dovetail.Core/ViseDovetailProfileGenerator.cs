@@ -30,9 +30,9 @@ public readonly record struct ProfilePoint2D(double X, double Y);
 public static class ViseDovetailProfileGenerator
 {
     /// <summary>
-    /// Creates a closed stock section. Y=0 is the lowest dovetail locating face;
-    /// the outside underside flats are at Y=Depth and the stock top is at
-    /// Y=StockHeight. FlankAngleDegrees is measured from the horizontal.
+    /// Creates a closed stock section. Y=0 is the underside of the rectangular
+    /// raw blank. The male dovetail extends downward to Y=-Depth; the stock top
+    /// is at Y=StockHeight. FlankAngleDegrees is measured from the horizontal.
     /// </summary>
     public static ViseDovetailCrossSection Generate(ViseStockPrepParameters p)
     {
@@ -54,14 +54,14 @@ public static class ViseDovetailProfileGenerator
 
         var leftToe = p.LeftLocatingFlat - undercut;
         var rightToe = p.StockWidth - p.RightLocatingFlat + undercut;
-        var leftFlankPoint = new ProfilePoint2D(p.LeftLocatingFlat, p.DovetailDepth);
-        var leftToePoint = new ProfilePoint2D(leftToe, 0);
-        var rightToePoint = new ProfilePoint2D(rightToe, 0);
-        var rightFlankPoint = new ProfilePoint2D(p.StockWidth - p.RightLocatingFlat, p.DovetailDepth);
+        var leftFlankPoint = new ProfilePoint2D(p.LeftLocatingFlat, 0);
+        var leftToePoint = new ProfilePoint2D(leftToe, -p.DovetailDepth);
+        var rightToePoint = new ProfilePoint2D(rightToe, -p.DovetailDepth);
+        var rightFlankPoint = new ProfilePoint2D(p.StockWidth - p.RightLocatingFlat, 0);
 
         var points = new List<ProfilePoint2D>
         {
-            new(0, p.DovetailDepth),
+            new(0, 0),
             leftFlankPoint
         };
 
@@ -92,7 +92,7 @@ public static class ViseDovetailProfileGenerator
         }
 
         points.Add(rightFlankPoint);
-        points.Add(new ProfilePoint2D(p.StockWidth, p.DovetailDepth));
+        points.Add(new ProfilePoint2D(p.StockWidth, 0));
         points.Add(new ProfilePoint2D(p.StockWidth, p.StockHeight));
         points.Add(new ProfilePoint2D(0, p.StockHeight));
 
