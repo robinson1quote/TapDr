@@ -1,10 +1,11 @@
 namespace TapDR.Dovetail.Core;
 
 /// <summary>
-/// Parametric cross-section primitive only. The profile is a projecting male
-/// dovetail tongue below the stock's underside, matching the orientation in
-/// the 5th Axis DSP-V drawing. Drawing datum mapping and edge-break geometry
-/// remain incomplete, so this primitive is not production-ready.
+/// Parametric DSP-V cross-section primitive only. It represents a male dovetail
+/// tongue milled from the underside of a rectangular raw blank: the lowest
+/// locating face is at Y=0, the two outer underside flats are at Y=Depth, and
+/// the top remains at Y=StockHeight. It is not production-released until exact
+/// drawing datum mapping, edge-break geometry, and solid tests are complete.
 /// </summary>
 public sealed record ViseDovetailCrossSection
 {
@@ -27,11 +28,10 @@ public readonly record struct ProfilePoint2D(double X, double Y);
 public static class ViseDovetailProfileGenerator
 {
     /// <summary>
-    /// Creates a closed 2D stock section with a male dovetail tongue projecting
-    /// below Y=0. FlankAngleDegrees is measured from the horizontal underside.
-    /// Left/right locating flats are the undisturbed underside lands at each
-    /// stock edge. The exact B/C datum relationship still requires full
-    /// drawing mapping before production release.
+    /// Creates a closed stock section. FlankAngleDegrees is measured from the
+    /// horizontal underside. The 0.250-inch minimum end flats, nominal depth,
+    /// and 45-degree flanks come from DSP-V. Exact dimension-B cutter datum
+    /// mapping is still a separate production-release requirement.
     /// </summary>
     public static ViseDovetailCrossSection Generate(ViseStockPrepParameters p)
     {
@@ -44,11 +44,9 @@ public static class ViseDovetailProfileGenerator
                     .Where(i => i.Severity == ValidationSeverity.Error)
                     .Select(i => i.Message)), nameof(p));
 
-        var radians = p.FlankAngleDegrees * Math.PI / 180.0;
-        var undercut = p.DovetailDepth / Math.Tan(radians);
+        var undercut = p.DovetailDepth /
+                       Math.Tan(p.FlankAngleDegrees * Math.PI / 180.0);
 
-        // A dovetail flank must not consume the whole locating flat and break
-        // through the stock side. Reject instead of silently clipping it.
         if (undercut >= p.LeftLocatingFlat || undercut >= p.RightLocatingFlat)
             throw new ArgumentException(
                 "The dovetail flank consumes a locating flat. Reduce depth or use a steeper flank angle.", nameof(p));
@@ -56,15 +54,17 @@ public static class ViseDovetailProfileGenerator
         var leftToe = p.LeftLocatingFlat - undercut;
         var rightToe = p.StockWidth - p.RightLocatingFlat + undercut;
 
-        // Counter-clockwise closed perimeter (implicit closing edge last->first).
+        // CCW boundary of the material remaining after the underside cuts.
+        // This keeps the complete profile inside the raw rectangular stock
+        // envelope: X=[0, StockWidth], Y=[0, StockHeight].
         var points = new[]
         {
-            new ProfilePoint2D(0, 0),
-            new ProfilePoint2D(p.LeftLocatingFlat, 0),
-            new ProfilePoint2D(leftToe, -p.DovetailDepth),
-            new ProfilePoint2D(rightToe, -p.DovetailDepth),
-            new ProfilePoint2D(p.StockWidth - p.RightLocatingFlat, 0),
-            new ProfilePoint2D(p.StockWidth, 0),
+            new ProfilePoint2D(0, p.DovetailDepth),
+            new ProfilePoint2D(p.LeftLocatingFlat, p.DovetailDepth),
+            new ProfilePoint2D(leftToe, 0),
+            new ProfilePoint2D(rightToe, 0),
+            new ProfilePoint2D(p.StockWidth - p.RightLocatingFlat, p.DovetailDepth),
+            new ProfilePoint2D(p.StockWidth, p.DovetailDepth),
             new ProfilePoint2D(p.StockWidth, p.StockHeight),
             new ProfilePoint2D(0, p.StockHeight)
         };
