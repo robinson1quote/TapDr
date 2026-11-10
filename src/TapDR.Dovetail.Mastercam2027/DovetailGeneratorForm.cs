@@ -108,7 +108,7 @@ internal sealed class DovetailGeneratorForm : Form
             "R96 D05125 — fixture / 96 mm"
         ]);
         ConfigureCombo(_units, ["Inch", "Millimeter"]);
-        AddRow(hardwareGroup, 0, "Vise model", _hardware);
+        AddRow(hardwareGroup, 0, "Hardware model", _hardware);
         AddRow(hardwareGroup, 1, "Input units", _units);
         leftStack.Controls.Add(hardwareGroup);
 
