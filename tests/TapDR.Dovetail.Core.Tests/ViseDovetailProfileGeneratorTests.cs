@@ -9,7 +9,8 @@ public sealed class ViseDovetailProfileGeneratorTests
         double width = 2.0,
         double height = 1.0,
         double depth = 0.080,
-        double angle = 45.0) =>
+        double angle = 45.0,
+        double edgeBreak = 0.010) =>
         new()
         {
             StockLength = 4.0,
@@ -20,30 +21,32 @@ public sealed class ViseDovetailProfileGeneratorTests
             LeftLocatingFlat = 0.250,
             RightLocatingFlat = 0.250,
             FlankAngleDegrees = angle,
-            MaximumEdgeBreak = 0.010
+            MaximumEdgeBreak = edgeBreak
         };
 
     [Fact]
-    public void Generate_ReturnsCorrectMaleDovetailInsideRawStockEnvelope()
+    public void Generate_AppliesToeEdgeBreakAndKeepsProfileInsideRawStock()
     {
         var profile = ViseDovetailProfileGenerator.Generate(ValidParameters());
         var points = profile.Boundary;
 
-        Assert.Equal(8, points.Count);
+        Assert.Equal(10, points.Count);
         AssertPoint(points[0], 0.000, 0.080);
         AssertPoint(points[1], 0.250, 0.080);
-        AssertPoint(points[2], 0.170, 0.000);
-        AssertPoint(points[3], 1.830, 0.000);
-        AssertPoint(points[4], 1.750, 0.080);
-        AssertPoint(points[5], 2.000, 0.080);
-        AssertPoint(points[6], 2.000, 1.000);
-        AssertPoint(points[7], 0.000, 1.000);
+        AssertPoint(points[2], 0.1770710678, 0.0070710678);
+        AssertPoint(points[3], 0.180, 0.000);
+        AssertPoint(points[4], 1.820, 0.000);
+        AssertPoint(points[5], 1.8229289322, 0.0070710678);
+        AssertPoint(points[6], 1.750, 0.080);
+        AssertPoint(points[7], 2.000, 0.080);
+        AssertPoint(points[8], 2.000, 1.000);
+        AssertPoint(points[9], 0.000, 1.000);
 
         Assert.Equal(0.080, profile.UndercutPerSide, 10);
         Assert.Equal(0.160, profile.MaximumDovetailWidth - profile.MouthWidth, 10);
+        Assert.Equal(0.010, profile.AppliedEdgeBreak, 10);
         Assert.False(profile.IsProductionReady);
 
-        // Every point remains inside the entered raw rectangular blank.
         Assert.All(points, p =>
         {
             Assert.InRange(p.X, 0.0, 2.0);
@@ -53,10 +56,21 @@ public sealed class ViseDovetailProfileGeneratorTests
     }
 
     [Fact]
+    public void Generate_CanOmitToeEdgeBreakWhenSetToZero()
+    {
+        var profile = ViseDovetailProfileGenerator.Generate(ValidParameters(edgeBreak: 0));
+
+        Assert.Equal(8, profile.Boundary.Count);
+        Assert.Equal(0.0, profile.AppliedEdgeBreak);
+        AssertPoint(profile.Boundary[2], 0.170, 0.000);
+        AssertPoint(profile.Boundary[3], 1.830, 0.000);
+    }
+
+    [Fact]
     public void Generate_UsesDepthAndAngleToCalculateUndercut()
     {
         var profile = ViseDovetailProfileGenerator.Generate(
-            ValidParameters(depth: 0.100, angle: 30.0));
+            ValidParameters(depth: 0.100, angle: 30.0, edgeBreak: 0));
 
         var expected = 0.100 / Math.Tan(Math.PI / 6.0);
         Assert.Equal(expected, profile.UndercutPerSide, 10);
@@ -70,6 +84,17 @@ public sealed class ViseDovetailProfileGeneratorTests
                 ValidParameters(depth: 0.300, angle: 30.0)));
 
         Assert.Contains("consumes a locating flat", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Generate_RejectsEdgeBreakThatCannotFitTheToeFlank()
+    {
+        var p = ValidParameters(depth: 0.001, edgeBreak: 0.010);
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ViseDovetailProfileGenerator.Generate(p));
+
+        Assert.Contains("edge break is too large", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
