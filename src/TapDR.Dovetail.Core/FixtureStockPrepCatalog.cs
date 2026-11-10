@@ -38,7 +38,7 @@ public static class FixtureStockPrepCatalog
             GaugePinDiameterInches = 0.0625,
             MaximumInternalRadiusInches = 0.015,
             MaximumEdgeBreakInches = 0.010,
-            UnmappedDrawingCallouts = [".713", ".357", ".2510 ± .0005", ".500 ± .020", ".250 programming dimension", ".126 +.000 / -.050 programming dimension"]
+            UnmappedDrawingCallouts = [".713", ".357", ".500 ± .020", ".250 programming dimension", ".126 +.000 / -.050 programming dimension"]
         },
         new()
         {
@@ -49,7 +49,7 @@ public static class FixtureStockPrepCatalog
             GaugePinDiameterInches = 0.1250,
             MaximumInternalRadiusInches = 0.015,
             MaximumEdgeBreakInches = 0.010,
-            UnmappedDrawingCallouts = ["1.427", ".714", ".2510 ± .0005", ".625 ± .020", ".500 programming dimension", ".386 +.000 / -.050 programming dimension"]
+            UnmappedDrawingCallouts = ["1.427", ".714", ".625 ± .020", ".500 programming dimension", ".386 +.000 / -.050 programming dimension"]
         },
         new()
         {
@@ -60,7 +60,7 @@ public static class FixtureStockPrepCatalog
             GaugePinDiameterInches = 0.0625,
             MaximumInternalRadiusInches = 0.015,
             MaximumEdgeBreakInches = 0.010,
-            UnmappedDrawingCallouts = [".413", ".207", ".1260 ± .0005", ".150 ± .020", ".100 programming dimension", ".066 +.000 / -.050 programming dimension", ".003 +.000 / -.050 programming dimension"]
+            UnmappedDrawingCallouts = [".413", ".207", ".150 ± .020", ".100 programming dimension", ".066 +.000 / -.050 programming dimension", ".003 +.000 / -.050 programming dimension"]
         }
     ];
 
