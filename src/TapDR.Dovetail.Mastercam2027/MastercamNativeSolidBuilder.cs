@@ -95,7 +95,14 @@ public static class MastercamNativeSolidBuilder
             var chains = ChainManager.ChainGeometry(geometry);
             if (chains is null || chains.Length != 1)
                 throw new InvalidOperationException(
-                    $"Mastercam must create exactly one closed profile chain; it returned {chains?.Length ?? 0}.");
+                    $"Mastercam must create exactly one profile chain; it returned {chains?.Length ?? 0}.");
+
+            if (!chains[0].IsFlat || !chains[0].IsClosed ||
+                !double.IsFinite(chains[0].Area) || chains[0].Area <= 0)
+            {
+                throw new InvalidOperationException(
+                    "Mastercam did not recognize the section as one flat, closed, positive-area chain.");
+            }
 
             if (!LevelsManager.SetLevelVisible(level, false))
                 throw new InvalidOperationException("Mastercam could not hide the construction profile level.");
