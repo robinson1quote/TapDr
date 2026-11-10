@@ -12,6 +12,8 @@ All six selected items use the user's confirmed 96 mm mounting system:
 
 Do not substitute V562X or R96-V75100X-1.
 
+The six choices are defined in a typed hardware catalog, not inferred from dropdown position. Each entry explicitly records its category, profile family, 96 mm interface, generation gate, and assembly components. The V75100X stack is stored as three separate components: V75100X vise, R96-V75100 adapter, and 96 mm mounting interface.
+
 Vise stock prep and fixture stock prep are separate profile families. Fixture stock preparation is not the 96 mm RockLock mounting interface.
 
 ## Vise stock prep — DSP-V
