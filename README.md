@@ -22,7 +22,7 @@ The core preserves the entered rectangular blank dimensions and creates the male
 
 `D = stock width - left flat - right flat + 2 × flank expansion`
 
-The 75% advisory is checked against D/stock width. It warns only; it does not reject or silently resize the profile.
+The 75% advisory is checked against D/stock width. It warns only; it does not reject or silently resize the profile. The app locks DSP-V depth to 0.080 in, flank angle to 45°, and toe edge break to the 0.010 in maximum. The core also warns when depth falls outside the drawing's general .XXX tolerance (±0.005 in), flank angle differs by more than the drawing's ±0.5° angular tolerance, or the toe edge break is omitted.
 
 Mastercam stock coordinates are Z-up: blank length runs along X, width along Y, and raw blank height along Z. Z=0 is the underside of the rectangular blank and the male tongue extends to Z=-0.080 in. The native adapter source constructs the section in the YZ plane and extrudes along X. The preview is a visual section/prism preview, not a rendering of a Mastercam B-rep.
 
