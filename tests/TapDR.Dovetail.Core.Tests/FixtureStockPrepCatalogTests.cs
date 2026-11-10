@@ -15,10 +15,10 @@ public sealed class FixtureStockPrepCatalogTests
         var profile = FixtureStockPrepCatalog.GetByFixtureModel(model);
 
         Assert.Equal(expectedDepth, profile.SlotDepthInches, 10);
-        Assert.Equal(expectedGaugePin, profile.GaugePinDiameterInches, 10);
+        Assert.Equal(expectedGaugePin, profile.GaugePinDiameterInches!.Value, 10);
         Assert.Equal(45.0, profile.FlankAngleDegrees, 10);
-        Assert.Equal(0.015, profile.MaximumInternalRadiusInches, 10);
-        Assert.Equal(0.010, profile.MaximumEdgeBreakInches, 10);
+        Assert.Equal(0.015, profile.MaximumInternalRadiusInches!.Value, 10);
+        Assert.Equal(0.010, profile.MaximumEdgeBreakInches!.Value, 10);
         Assert.Equal("A", profile.Metadata.Revision);
         Assert.False(profile.CanGenerateProductionGeometry);
     }
