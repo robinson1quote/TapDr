@@ -9,6 +9,8 @@ public sealed record FixtureStockPrepDefinition
     public required ManufacturerProfileMetadata Metadata { get; init; }
     public required string FixtureModel { get; init; }
     public required double SlotDepthInches { get; init; }
+    public required double SlotWidthInches { get; init; }
+    public double SlotWidthToleranceInches { get; init; } = 0.0005;
     public double FlankAngleDegrees { get; init; } = 45.0;
     public double? GaugePinDiameterInches { get; init; }
     public double? MaximumInternalRadiusInches { get; init; }
@@ -32,6 +34,7 @@ public static class FixtureStockPrepCatalog
             Metadata = Metadata("DSP-D115", "D115", "DSP-D115", "A", "https://5thaxis.com/wp-content/uploads/2021/05/Dovetail-Stock-Prep-Inch-Dovetails.pdf"),
             FixtureModel = "D115",
             SlotDepthInches = 0.080,
+            SlotWidthInches = 0.2510,
             GaugePinDiameterInches = 0.0625,
             MaximumInternalRadiusInches = 0.015,
             MaximumEdgeBreakInches = 0.010,
@@ -42,6 +45,7 @@ public static class FixtureStockPrepCatalog
             Metadata = Metadata("DSP-D22", "D22", "DSP-D22", "A", "https://5thaxis.com/wp-content/uploads/2021/05/Dovetail-Stock-Prep-Inch-Dovetails.pdf"),
             FixtureModel = "D22",
             SlotDepthInches = 0.150,
+            SlotWidthInches = 0.2510,
             GaugePinDiameterInches = 0.1250,
             MaximumInternalRadiusInches = 0.015,
             MaximumEdgeBreakInches = 0.010,
@@ -52,6 +56,7 @@ public static class FixtureStockPrepCatalog
             Metadata = Metadata("DSP-D05125", "D05125", "DSP-D05125", "A", "https://5thaxis.com/wp-content/uploads/2021/04/D05125-Dovetail-Stock-Preparation-2022.pdf"),
             FixtureModel = "D05125",
             SlotDepthInches = 0.080,
+            SlotWidthInches = 0.1260,
             GaugePinDiameterInches = 0.0625,
             MaximumInternalRadiusInches = 0.015,
             MaximumEdgeBreakInches = 0.010,
