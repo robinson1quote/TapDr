@@ -17,6 +17,9 @@ public sealed class FixtureStockPrepCatalogTests
         Assert.Equal(expectedDepth, profile.SlotDepthInches, 10);
         Assert.Equal(expectedSlotWidth, profile.SlotWidthInches, 10);
         Assert.Equal(0.0005, profile.SlotWidthToleranceInches, 10);
+        Assert.DoesNotContain(
+            profile.UnmappedDrawingCallouts,
+            callout => callout.Contains(expectedSlotWidth.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture), StringComparison.Ordinal));
         Assert.Equal(expectedGaugePin, profile.GaugePinDiameterInches!.Value, 10);
         Assert.Equal(45.0, profile.FlankAngleDegrees, 10);
         Assert.Equal(0.015, profile.MaximumInternalRadiusInches!.Value, 10);
