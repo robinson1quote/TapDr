@@ -1,10 +1,9 @@
 namespace TapDR.Dovetail.Core;
 
 /// <summary>
-/// Parametric DSP-V cross-section primitive only. It represents the male dovetail
-/// tongue milled into the underside of a rectangular raw blank. The outline
-/// includes the requested toe edge breaks; exact cutter datum mapping and final
-/// production release remain separate requirements.
+/// A parametric cross-section primitive only. It is deliberately not marked
+/// production-ready until drawing datums, edge-break geometry, and solid tests
+/// are complete.
 /// </summary>
 public sealed record ViseDovetailCrossSection
 {
@@ -14,14 +13,16 @@ public sealed record ViseDovetailCrossSection
     public required double LeftLocatingFlat { get; init; }
     public required double RightLocatingFlat { get; init; }
     public required double FlankAngleDegrees { get; init; }
-    public required double AppliedEdgeBreak { get; init; }
     public required IReadOnlyList<ProfilePoint2D> Boundary { get; init; }
+    public required double UndercutPerSide { get; init; }
 
+    /// <summary>Width of the groove at the stock underside.</summary>
     public double MouthWidth => StockWidth - LeftLocatingFlat - RightLocatingFlat;
-    public double UndercutPerSide => Depth / Math.Tan(FlankAngleDegrees * Math.PI / 180.0);
+
+    /// <summary>Width between the two outer dovetail points at full depth.</summary>
     public double DovetailWidth => MouthWidth + 2 * UndercutPerSide;
+
     public double DovetailWidthRatio => DovetailWidth / StockWidth;
-    public double MaximumDovetailWidth => DovetailWidth;
     public bool IsProductionReady => false;
 }
 
@@ -30,9 +31,9 @@ public readonly record struct ProfilePoint2D(double X, double Y);
 public static class ViseDovetailProfileGenerator
 {
     /// <summary>
-    /// Creates a closed stock section. Y=0 is the lowest dovetail locating face;
-    /// the outside underside flats are at Y=Depth and the stock top is at
-    /// Y=StockHeight. FlankAngleDegrees is measured from the horizontal.
+    /// Creates the DSP-V underside relief boundary. FlankAngleDegrees is measured
+    /// from the horizontal underside. The groove widens toward its deeper floor.
+    /// All coordinates use the input unit.
     /// </summary>
     public static ViseDovetailCrossSection Generate(ViseStockPrepParameters p)
     {
@@ -45,56 +46,28 @@ public static class ViseDovetailProfileGenerator
                     .Where(i => i.Severity == ValidationSeverity.Error)
                     .Select(i => i.Message)), nameof(p));
 
-        var undercut = p.DovetailDepth /
-                       Math.Tan(p.FlankAngleDegrees * Math.PI / 180.0);
+        var radians = p.FlankAngleDegrees * Math.PI / 180.0;
+        var undercut = p.DovetailDepth / Math.Tan(radians);
+        var mouthLeft = p.LeftLocatingFlat;
+        var mouthRight = p.StockWidth - p.RightLocatingFlat;
 
+        // The dovetail opens outward with depth: left point moves left and
+        // right point moves right. The locating flats must remain positive.
         if (undercut >= p.LeftLocatingFlat || undercut >= p.RightLocatingFlat)
             throw new ArgumentException(
-                "The dovetail flank consumes a locating flat. Reduce depth or use a steeper flank angle.", nameof(p));
+                "The dovetail undercut consumes a locating flat. Increase the locating-flat length or reduce depth.", nameof(p));
 
-        var leftToe = p.LeftLocatingFlat - undercut;
-        var rightToe = p.StockWidth - p.RightLocatingFlat + undercut;
-        var leftFlankPoint = new ProfilePoint2D(p.LeftLocatingFlat, p.DovetailDepth);
-        var leftToePoint = new ProfilePoint2D(leftToe, 0);
-        var rightToePoint = new ProfilePoint2D(rightToe, 0);
-        var rightFlankPoint = new ProfilePoint2D(p.StockWidth - p.RightLocatingFlat, p.DovetailDepth);
-
-        var points = new List<ProfilePoint2D>
+        var points = new[]
         {
-            new(0, p.DovetailDepth),
-            leftFlankPoint
+            new ProfilePoint2D(0, 0),
+            new ProfilePoint2D(mouthLeft, 0),
+            new ProfilePoint2D(mouthLeft - undercut, p.DovetailDepth),
+            new ProfilePoint2D(mouthRight + undercut, p.DovetailDepth),
+            new ProfilePoint2D(mouthRight, 0),
+            new ProfilePoint2D(p.StockWidth, 0),
+            new ProfilePoint2D(p.StockWidth, p.StockHeight),
+            new ProfilePoint2D(0, p.StockHeight)
         };
-
-        if (p.MaximumEdgeBreak > 0)
-        {
-            var leftFlankLength = Distance(leftToePoint, leftFlankPoint);
-            var rightFlankLength = Distance(rightToePoint, rightFlankPoint);
-            var toeLength = Distance(leftToePoint, rightToePoint);
-            if (p.MaximumEdgeBreak >= leftFlankLength ||
-                p.MaximumEdgeBreak >= rightFlankLength ||
-                2 * p.MaximumEdgeBreak >= toeLength)
-            {
-                throw new ArgumentException(
-                    "The selected toe edge break is too large for the dovetail flank or locating face.", nameof(p));
-            }
-
-            // Chamfer both lower toe corners by the specified edge-break
-            // distance measured along each adjacent profile edge.
-            points.Add(PointToward(leftToePoint, leftFlankPoint, p.MaximumEdgeBreak));
-            points.Add(PointToward(leftToePoint, rightToePoint, p.MaximumEdgeBreak));
-            points.Add(PointToward(rightToePoint, leftToePoint, p.MaximumEdgeBreak));
-            points.Add(PointToward(rightToePoint, rightFlankPoint, p.MaximumEdgeBreak));
-        }
-        else
-        {
-            points.Add(leftToePoint);
-            points.Add(rightToePoint);
-        }
-
-        points.Add(rightFlankPoint);
-        points.Add(new ProfilePoint2D(p.StockWidth, p.DovetailDepth));
-        points.Add(new ProfilePoint2D(p.StockWidth, p.StockHeight));
-        points.Add(new ProfilePoint2D(0, p.StockHeight));
 
         return new ViseDovetailCrossSection
         {
@@ -104,28 +77,8 @@ public static class ViseDovetailProfileGenerator
             LeftLocatingFlat = p.LeftLocatingFlat,
             RightLocatingFlat = p.RightLocatingFlat,
             FlankAngleDegrees = p.FlankAngleDegrees,
-            AppliedEdgeBreak = p.MaximumEdgeBreak,
-            Boundary = Array.AsReadOnly(points.ToArray())
+            Boundary = points,
+            UndercutPerSide = undercut
         };
-    }
-
-    private static double Distance(ProfilePoint2D a, ProfilePoint2D b)
-    {
-        var dx = b.X - a.X;
-        var dy = b.Y - a.Y;
-        return Math.Sqrt(dx * dx + dy * dy);
-    }
-
-    private static ProfilePoint2D PointToward(
-        ProfilePoint2D origin, ProfilePoint2D target, double distance)
-    {
-        var length = Distance(origin, target);
-        if (length <= 0 || distance < 0 || distance >= length)
-            throw new ArgumentOutOfRangeException(nameof(distance));
-
-        var ratio = distance / length;
-        return new ProfilePoint2D(
-            origin.X + (target.X - origin.X) * ratio,
-            origin.Y + (target.Y - origin.Y) * ratio);
     }
 }
