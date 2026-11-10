@@ -29,6 +29,19 @@ public sealed class FixtureStockPrepCatalogTests
     }
 
     [Fact]
+    public void EveryFixtureHasPositiveMappedSlotDimensionsAndRemainsGenerationBlocked()
+    {
+        Assert.All(FixtureStockPrepCatalog.All, profile =>
+        {
+            Assert.True(profile.SlotDepthInches > 0);
+            Assert.True(profile.SlotWidthInches > 0);
+            Assert.True(profile.SlotWidthToleranceInches > 0);
+            Assert.True(profile.SlotWidthToleranceInches < profile.SlotWidthInches);
+            Assert.False(profile.CanGenerateProductionGeometry);
+        });
+    }
+
+    [Fact]
     public void Catalog_ContainsOnlyTheThreeSelectedFixtureModels()
     {
         Assert.Equal(
