@@ -93,12 +93,12 @@ public static class ViseStockPrepValidator
         if (double.IsFinite(p.MaximumEdgeBreak) && p.MaximumEdgeBreak > maxEdge)
             Error("VISE-EDGE-BREAK-LIMIT", $"Edge break cannot exceed {maxEdge:G6} {p.Unit}.");
         if (double.IsFinite(p.DovetailDepth) &&
-            Math.Abs(p.DovetailDepth - nominalDepth) > depthTolerance)
+            Math.Abs(p.DovetailDepth - nominalDepth) > depthTolerance + 1e-9)
             Warning("VISE-DEPTH-NONSTANDARD",
                 $"Depth differs from the DSP-V nominal {nominalDepth:G6} {p.Unit} by more than the drawing tolerance {depthTolerance:G6} {p.Unit}.");
 
         if (double.IsFinite(p.FlankAngleDegrees) &&
-            Math.Abs(p.FlankAngleDegrees - NominalFlankAngleDegrees) > FlankAngleToleranceDegrees)
+            Math.Abs(p.FlankAngleDegrees - NominalFlankAngleDegrees) > FlankAngleToleranceDegrees + 1e-9)
             Warning("VISE-ANGLE-NONSTANDARD",
                 $"Flank angle differs from the DSP-V 45° nominal by more than the drawing tolerance of {FlankAngleToleranceDegrees:G3}°.");
 
