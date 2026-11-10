@@ -28,6 +28,7 @@ internal sealed class DovetailGeneratorForm : Form
     private readonly Label _dimensionSummary = new();
     private readonly Button _generate = new();
     private readonly CrossSectionPreviewPanel _preview = new();
+    private GroupBox? _profileGroup;
 
     private LengthUnit _currentUnit = LengthUnit.Inch;
     private ViseDovetailCrossSection? _currentProfile;
@@ -89,7 +90,7 @@ internal sealed class DovetailGeneratorForm : Form
 
         var subtitle = new Label
         {
-            Text = "Create native, editable vise stock-prep geometry in the active Mastercam file.",
+            Text = "Create native, editable stock-prep geometry in the active Mastercam file.",
             ForeColor = Color.FromArgb(83, 99, 119),
             AutoSize = false,
             Width = 430,
@@ -98,7 +99,14 @@ internal sealed class DovetailGeneratorForm : Form
         leftStack.Controls.Add(subtitle);
 
         var hardwareGroup = MakeGroup("HARDWARE", 2, 430);
-        ConfigureCombo(_hardware, ["V75100X — R96-V75100 adapter", "V562 — original / 96 mm mount", "V6105 — 96 mm mount"]);
+        ConfigureCombo(_hardware, [
+            "V75100X — R96-V75100 adapter / 96 mm",
+            "V562 — original / 96 mm",
+            "V6105 — 96 mm",
+            "R96 D115 — fixture / 96 mm",
+            "R96 D22 — fixture / 96 mm",
+            "R96 D05125 — fixture / 96 mm"
+        ]);
         ConfigureCombo(_units, ["Inch", "Millimeter"]);
         AddRow(hardwareGroup, 0, "Vise model", _hardware);
         AddRow(hardwareGroup, 1, "Input units", _units);
@@ -110,7 +118,7 @@ internal sealed class DovetailGeneratorForm : Form
         AddRow(stockGroup, 2, "Height", _height);
         leftStack.Controls.Add(stockGroup);
 
-        var profileGroup = MakeGroup("DSP-V DOVETAIL PROFILE", 5, 430);
+        var profileGroup = _profileGroup = MakeGroup("DSP-V DOVETAIL PROFILE", 5, 430);
         AddRow(profileGroup, 0, "Dovetail depth", _depth);
         AddRow(profileGroup, 1, "Left locating flat", _leftFlat);
         AddRow(profileGroup, 2, "Right locating flat", _rightFlat);
@@ -247,6 +255,26 @@ internal sealed class DovetailGeneratorForm : Form
 
     private void UpdatePreview()
     {
+        if (_hardware.SelectedIndex >= 3)
+        {
+            _currentProfile = null;
+            _preview.Profile = null;
+            _preview.StockLength = 0;
+            _generate.Enabled = false;
+            if (_profileGroup is not null)
+                _profileGroup.Enabled = false;
+
+            var fixture = _hardware.SelectedItem?.ToString() ?? "Selected fixture";
+            _status.ForeColor = Color.FromArgb(161, 102, 22);
+            _status.Text = $"{fixture}: fixture stock-prep geometry is cataloged but generation is blocked until its drawing coordinates are fully mapped.";
+            _dimensionSummary.Text = "Fixture geometry not yet enabled.";
+            _preview.Invalidate();
+            return;
+        }
+
+        if (_profileGroup is not null)
+            _profileGroup.Enabled = true;
+
         try
         {
             var parameters = ReadParameters();
@@ -291,9 +319,10 @@ internal sealed class DovetailGeneratorForm : Form
             var profile = ViseDovetailProfileGenerator.Generate(parameters);
             var model = _hardware.SelectedIndex switch
             {
-                0 => "V75100X / R96-V75100",
-                1 => "V562",
-                _ => "V6105"
+                0 => "V75100X / R96-V75100 / 96 mm",
+                1 => "V562 original / 96 mm",
+                2 => "V6105 / 96 mm",
+                _ => throw new InvalidOperationException("Fixture stock-prep generation is disabled until its manufacturer drawing coordinates are verified.")
             };
 
             var result = MastercamNativeSolidBuilder.CreateViseBlank(
