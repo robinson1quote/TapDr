@@ -119,12 +119,12 @@ public static class ViseStockPrepValidator
                 }
                 else
                 {
-                    // The groove widens toward its deeper floor. This is the
-                    // drawing-defined dovetail width used for the 75% advisory.
-                    var dovetailWidth =
+                    // The male dovetail widens outward toward its lower toe.
+                    // This computes the locating-face width for the 75% advisory.
+                    var locatingFaceWidth =
                         p.StockWidth - p.LeftLocatingFlat - p.RightLocatingFlat
                         + 2.0 * horizontalUndercut;
-                    var ratio = dovetailWidth / p.StockWidth;
+                    var ratio = locatingFaceWidth / p.StockWidth;
 
                     if (ratio < RecommendedDovetailWidthRatio)
                         Warning("VISE-WIDTH-RATIO",
