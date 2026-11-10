@@ -2,6 +2,7 @@
 
 APPLICATION "TapDRDovetailStockGenerator"
 FUNC_DLL "TapDR.Dovetail.Mastercam2027.dll"
+RES_DLL "SAME"
 CATEGORY "TapDR"
 
 FUNCTION NET "Run"
