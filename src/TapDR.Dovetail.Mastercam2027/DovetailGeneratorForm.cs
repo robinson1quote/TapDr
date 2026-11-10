@@ -21,8 +21,8 @@ internal sealed class DovetailGeneratorForm : Form
     private readonly TextBox _offsetX = Input("0");
     private readonly TextBox _offsetY = Input("0");
     private readonly TextBox _offsetZ = Input("0");
-    private readonly CheckBox _centerX = new() { Text = "Center stock width on X0", AutoSize = true };
-    private readonly CheckBox _centerZ = new() { Text = "Center stock length on Z0", AutoSize = true };
+    private readonly CheckBox _centerWidthOnY = new() { Text = "Center stock width on Y0", AutoSize = true };
+    private readonly CheckBox _centerLengthOnX = new() { Text = "Center stock length on X0", AutoSize = true };
     private readonly Label _unitLabel = new();
     private readonly Label _status = new();
     private readonly Label _dimensionSummary = new();
@@ -130,8 +130,8 @@ internal sealed class DovetailGeneratorForm : Form
             Width = 410,
             Padding = new Padding(6, 2, 6, 4)
         };
-        checkPanel.Controls.Add(_centerX);
-        checkPanel.Controls.Add(_centerZ);
+        checkPanel.Controls.Add(_centerWidthOnY);
+        checkPanel.Controls.Add(_centerLengthOnX);
         var placementTable = (TableLayoutPanel)placementGroup.Tag!;
         placementTable.Controls.Add(checkPanel, 0, 3);
         placementTable.SetColumnSpan(checkPanel, 2);
@@ -213,8 +213,8 @@ internal sealed class DovetailGeneratorForm : Form
 
         _hardware.SelectedIndexChanged += (_, _) => UpdatePreview();
         _units.SelectedIndexChanged += (_, _) => ChangeUnits();
-        _centerX.CheckedChanged += (_, _) => UpdatePreview();
-        _centerZ.CheckedChanged += (_, _) => UpdatePreview();
+        _centerWidthOnY.CheckedChanged += (_, _) => UpdatePreview();
+        _centerLengthOnX.CheckedChanged += (_, _) => UpdatePreview();
         _generate.Click += (_, _) => GenerateSolid();
     }
 
@@ -304,8 +304,8 @@ internal sealed class DovetailGeneratorForm : Form
                 ReadValue(_offsetX, "Offset X"),
                 ReadValue(_offsetY, "Offset Y"),
                 ReadValue(_offsetZ, "Offset Z"),
-                _centerX.Checked,
-                _centerZ.Checked);
+                _centerWidthOnY.Checked,
+                _centerLengthOnX.Checked);
 
             _status.ForeColor = Color.FromArgb(35, 119, 79);
             _status.Text =
