@@ -112,7 +112,7 @@ internal sealed class DovetailGeneratorForm : Form
         AddRow(stockGroup, 2, "Height", _height);
         leftStack.Controls.Add(stockGroup);
 
-        var profileGroup = _profileGroup = MakeGroup("DSP-V DOVETAIL PROFILE", 5, 430);
+        var profileGroup = _profileGroup = MakeGroup("STOCK PREP PROFILE", 5, 430);
         AddRow(profileGroup, 0, "Dovetail depth (fixed)", _depth);
         AddRow(profileGroup, 1, "Left locating flat", _leftFlat);
         AddRow(profileGroup, 2, "Right locating flat", _rightFlat);
