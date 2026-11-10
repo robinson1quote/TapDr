@@ -1,11 +1,10 @@
 namespace TapDR.Dovetail.Core;
 
 /// <summary>
-/// Parametric DSP-V cross-section primitive only. It represents a male dovetail
-/// tongue milled from the underside of a rectangular raw blank: the lowest
-/// locating face is at Y=0, the two outer underside flats are at Y=Depth, and
-/// the top remains at Y=StockHeight. It is not production-released until exact
-/// drawing datum mapping, edge-break geometry, and solid tests are complete.
+/// Parametric DSP-V cross-section primitive only. It represents the male dovetail
+/// tongue milled into the underside of a rectangular raw blank. The outline
+/// includes the requested toe edge breaks; exact cutter datum mapping and final
+/// production release remain separate requirements.
 /// </summary>
 public sealed record ViseDovetailCrossSection
 {
@@ -15,10 +14,11 @@ public sealed record ViseDovetailCrossSection
     public required double LeftLocatingFlat { get; init; }
     public required double RightLocatingFlat { get; init; }
     public required double FlankAngleDegrees { get; init; }
+    public required double AppliedEdgeBreak { get; init; }
     public required IReadOnlyList<ProfilePoint2D> Boundary { get; init; }
-    public required double UndercutPerSide { get; init; }
 
     public double MouthWidth => StockWidth - LeftLocatingFlat - RightLocatingFlat;
+    public double UndercutPerSide => Depth / Math.Tan(FlankAngleDegrees * Math.PI / 180.0);
     public double MaximumDovetailWidth => MouthWidth + 2 * UndercutPerSide;
     public bool IsProductionReady => false;
 }
@@ -28,10 +28,9 @@ public readonly record struct ProfilePoint2D(double X, double Y);
 public static class ViseDovetailProfileGenerator
 {
     /// <summary>
-    /// Creates a closed stock section. FlankAngleDegrees is measured from the
-    /// horizontal underside. The 0.250-inch minimum end flats, nominal depth,
-    /// and 45-degree flanks come from DSP-V. Exact dimension-B cutter datum
-    /// mapping is still a separate production-release requirement.
+    /// Creates a closed stock section. Y=0 is the lowest dovetail locating face;
+    /// the outside underside flats are at Y=Depth and the stock top is at
+    /// Y=StockHeight. FlankAngleDegrees is measured from the horizontal.
     /// </summary>
     public static ViseDovetailCrossSection Generate(ViseStockPrepParameters p)
     {
@@ -53,25 +52,47 @@ public static class ViseDovetailProfileGenerator
 
         var leftToe = p.LeftLocatingFlat - undercut;
         var rightToe = p.StockWidth - p.RightLocatingFlat + undercut;
+        var leftFlankPoint = new ProfilePoint2D(p.LeftLocatingFlat, p.DovetailDepth);
+        var leftToePoint = new ProfilePoint2D(leftToe, 0);
+        var rightToePoint = new ProfilePoint2D(rightToe, 0);
+        var rightFlankPoint = new ProfilePoint2D(p.StockWidth - p.RightLocatingFlat, p.DovetailDepth);
 
-        // CCW boundary of the material remaining after the underside cuts.
-        // This keeps the complete profile inside the raw rectangular stock
-        // envelope: X=[0, StockWidth], Y=[0, StockHeight].
-        var points = new[]
+        var points = new List<ProfilePoint2D>
         {
-            new ProfilePoint2D(0, p.DovetailDepth),
-            new ProfilePoint2D(p.LeftLocatingFlat, p.DovetailDepth),
-            new ProfilePoint2D(leftToe, 0),
-            new ProfilePoint2D(rightToe, 0),
-            new ProfilePoint2D(p.StockWidth - p.RightLocatingFlat, p.DovetailDepth),
-            new ProfilePoint2D(p.StockWidth, p.DovetailDepth),
-            new ProfilePoint2D(p.StockWidth, p.StockHeight),
-            new ProfilePoint2D(0, p.StockHeight)
+            new(0, p.DovetailDepth),
+            leftFlankPoint
         };
 
-        if (leftToe >= rightToe)
-            throw new ArgumentException(
-                "The dovetail locating surface has no usable width.", nameof(p));
+        if (p.MaximumEdgeBreak > 0)
+        {
+            var leftFlankLength = Distance(leftToePoint, leftFlankPoint);
+            var rightFlankLength = Distance(rightToePoint, rightFlankPoint);
+            var toeLength = Distance(leftToePoint, rightToePoint);
+            if (p.MaximumEdgeBreak >= leftFlankLength ||
+                p.MaximumEdgeBreak >= rightFlankLength ||
+                2 * p.MaximumEdgeBreak >= toeLength)
+            {
+                throw new ArgumentException(
+                    "The selected toe edge break is too large for the dovetail flank or locating face.", nameof(p));
+            }
+
+            // Chamfer both lower toe corners by the specified edge-break
+            // distance measured along each adjacent profile edge.
+            points.Add(PointToward(leftToePoint, leftFlankPoint, p.MaximumEdgeBreak));
+            points.Add(PointToward(leftToePoint, rightToePoint, p.MaximumEdgeBreak));
+            points.Add(PointToward(rightToePoint, leftToePoint, p.MaximumEdgeBreak));
+            points.Add(PointToward(rightToePoint, rightFlankPoint, p.MaximumEdgeBreak));
+        }
+        else
+        {
+            points.Add(leftToePoint);
+            points.Add(rightToePoint);
+        }
+
+        points.Add(rightFlankPoint);
+        points.Add(new ProfilePoint2D(p.StockWidth, p.DovetailDepth));
+        points.Add(new ProfilePoint2D(p.StockWidth, p.StockHeight));
+        points.Add(new ProfilePoint2D(0, p.StockHeight));
 
         return new ViseDovetailCrossSection
         {
@@ -81,8 +102,28 @@ public static class ViseDovetailProfileGenerator
             LeftLocatingFlat = p.LeftLocatingFlat,
             RightLocatingFlat = p.RightLocatingFlat,
             FlankAngleDegrees = p.FlankAngleDegrees,
-            Boundary = Array.AsReadOnly(points),
-            UndercutPerSide = undercut
+            AppliedEdgeBreak = p.MaximumEdgeBreak,
+            Boundary = Array.AsReadOnly(points.ToArray())
         };
+    }
+
+    private static double Distance(ProfilePoint2D a, ProfilePoint2D b)
+    {
+        var dx = b.X - a.X;
+        var dy = b.Y - a.Y;
+        return Math.Sqrt(dx * dx + dy * dy);
+    }
+
+    private static ProfilePoint2D PointToward(
+        ProfilePoint2D origin, ProfilePoint2D target, double distance)
+    {
+        var length = Distance(origin, target);
+        if (length <= 0 || distance < 0 || distance >= length)
+            throw new ArgumentOutOfRangeException(nameof(distance));
+
+        var ratio = distance / length;
+        return new ProfilePoint2D(
+            origin.X + (target.X - origin.X) * ratio,
+            origin.Y + (target.Y - origin.Y) * ratio);
     }
 }
