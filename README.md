@@ -35,10 +35,17 @@ Each fixture has its own workpiece stock-prep drawing. Drawing revisions are tra
 - [ ] Production coordinate mapping and tests for each fixture profile.
 - [ ] Mastercam 2027 native geometry adapter.
 - [ ] In-Mastercam parameter UI and live preview.
-- [ ] Installer and toolbar integration.
+- [x] One-click `Build-and-Install.bat` and transactional PowerShell installer authored (not yet exercised on a Windows Mastercam 2027 seat).\n- [ ] Mastercam toolbar integration.
 
 **No Mastercam runtime success is claimed.** The documented .NET reference includes ChainManager.ChainGeometry, SolidOperations.SolidExtrudeFromChain, and solid Boolean operations. Exact 2027 assembly compatibility and execution remain unverified.
 
 ## Build target
 
 The independent geometry core targets .NET 10. The Mastercam adapter's target framework must be selected from the actual assemblies installed with Mastercam 2027, not inferred from another release or forum post.
+
+
+## Windows build and installation
+
+With Mastercam 2027 and the .NET 10 SDK installed at the standard location, double-click `Build-and-Install.bat`. The script runs the geometry tests first, builds the NET-Hook against the local Mastercam assemblies, stages the files, backs up an existing installation, and then swaps in the new add-in. It stops before installation if tests or compilation fail.
+
+The script and project are source-authored but have not yet been executed on a Windows machine with Mastercam 2027 installed. Do not treat the installer as a verified binary release.
