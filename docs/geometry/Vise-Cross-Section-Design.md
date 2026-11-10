@@ -1,66 +1,69 @@
 # Vise cross-section geometry — DSP-V drawing interpretation
 
-## Drawing source and datum model
+## Manufacturer drawing inputs
 
-The common 5th Axis DSP-V Rev A drawing labels:
-- A: overall stock width.
-- B: two minimum 0.250 in locating-flat lengths, one at each stock edge.
-- C: 0.080 in dovetail depth.
-- Maximum edge break: 0.010 in at the dovetail point.
+The common 5th Axis DSP-V Rev A drawing shows:
+- Overall stock width A.
+- Two 0.250 in minimum locating-flat lengths B, one at each outside edge.
+- 0.080 in dovetail depth C.
+- 45-degree dovetail cut surfaces.
+- 0.010 in maximum edge break at the dovetail point.
 
-It states that the DSP-V preparation works with all 5th Axis vises. It also says C is the most critical dimension and that A/B vary with stock size. The 75% dovetail-width note is a recommendation, not an absolute rule.
+The drawing states it applies to all 5th Axis vises. It identifies C as the most critical dimension and says A/B change with stock size. Its 75% dovetail-width guidance is explicitly a recommendation, not an absolute rule.
 
-## Cross-section
+## Coordinate convention and first parametric model
 
-The profile is a **male dovetail tongue** projecting below the stock's locating plane. It is not a trapezoidal pocket cut upward into the blank.
+The generator represents the stock inside its raw rectangular envelope:
+- X = 0 to stock width W.
+- Y = 0 at the lowest central dovetail locating surface.
+- The two outside underside locating flats lie at Y = depth d.
+- The stock top lies at Y = stock height H.
+- The tongue therefore remains inside the entered raw-stock height; the generator does not add material below the blank.
 
-Use the locating plane as Y=0 and positive Y into the stock. The dovetail toe extends in negative Y by C.
+Inputs:
+- W: stock width.
+- H: raw stock height.
+- fL / fR: left/right outside locating-flat lengths.
+- d: dovetail depth C.
+- theta: flank angle measured from the horizontal underside.
+- u: horizontal expansion of the toe on each side.
 
-Let:
-- W = stock width.
-- fL / fR = left/right locating-flat lengths.
-- d = dovetail depth C.
-- theta = flank angle measured from the locating plane.
-- u = horizontal toe expansion on each side.
+The initial geometric relationship is:
 
-The initial parametric relationship is:
+`u = d / tan(theta)`
 
-\[
-u = \frac{d}{\tan(\theta)}
-\]
+The outside flank start locations are:
 
-The two upper flank endpoints are:
+`xL = fL`
 
-\[
-x_{mouth,L}=f_L,\quad x_{mouth,R}=W-f_R
-\]
+`xR = W - fR`
 
 The lower toe endpoints are:
 
-\[
-x_{toe,L}=f_L-u,\quad x_{toe,R}=W-f_R+u
-\]
+`xToeL = fL - u`
 
-The generator requires each toe endpoint to remain within the stock's outside width. This prevents the dovetail from overhanging beyond the locating flats. The eight points are ordered counter-clockwise, starting at the lower-left stock corner and walking across the underside, up the right side, and back across the top.
+`xToeR = W - fR + u`
 
-For a symmetric 2.000 in wide blank using 0.250 in locating flats, 0.080 in depth, and 45-degree flanks, the generated cross-section has:
-- mouth width = 1.500 in.
-- toe expansion = 0.080 in per side.
-- toe width = 1.660 in.
-- toe depth = 0.080 in below the locating plane.
+The eight-point boundary is:
 
-These are geometry calculations from those inputs, not additional manufacturer-specified dimensions.
+`(0,d), (fL,d), (fL-u,0), (W-fR+u,0), (W-fR,d), (W,d), (W,H), (0,H)`
 
-## Implementation status
+The generator rejects the profile if either flank consumes its locating flat, if the toe has no usable width, or if upstream input validation fails.
 
-The core now generates this male-tongue orientation and checks finite coordinates, flank fit, and positive polygon area. Automated tests assert the point coordinates, depth/angle calculation, metric-unit behavior, invalid dimensions, and toe-overhang rejection.
+For a 2.000 in wide blank with 0.250 in locating flats, 0.080 in depth, and 45-degree flanks, this model calculates:
+- outside flank-start span: 1.500 in.
+- toe expansion: 0.080 in per side.
+- toe width: 1.660 in.
 
-## Still blocked from production
+Those calculated widths are consequences of the parametric model, not separately called-out manufacturer dimensions.
 
-- Apply the specified 0.010 in maximum edge break as actual geometry at the dovetail point.
-- Verify the detailed contact/relief interpretation against all profile views and the actual cutter geometry before releasing a machining profile.
-- Check the drawing's 75% width recommendation using the drawing-defined dovetail width.
-- Add polygon simplicity/solid validity tests and native Mastercam solid tests.
-- Verify the resulting B-rep in Mastercam 2027.
+## Remaining release gates
 
-The generated outline remains a development geometry primitive; it is not production-authorized.
+- Map the drawing's B cutter/programming datum exactly; do not assume a generated span is a substitute for that toolpath datum.
+- Apply the 0.010 in maximum edge break as actual profile geometry.
+- Confirm corner relief and contact surfaces against the manufacturer's details and actual cutter geometry.
+- Validate the 75% recommendation against the correctly mapped dovetail-width definition.
+- Add polygon self-intersection and solid validity tests.
+- Build and verify the native B-rep inside Mastercam 2027.
+
+The current cross-section is development geometry only. It is not production-authorized.
