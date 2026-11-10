@@ -64,6 +64,8 @@ public static class MastercamNativeSolidBuilder
             throw new InvalidOperationException("Mastercam could not create a dedicated construction level.");
 
         var committedLines = new List<LineGeometry>();
+        Chain[] chains = Array.Empty<Chain>();
+        var chainsAllocated = false;
         var keepProfile = false;
 
         try
@@ -93,10 +95,15 @@ public static class MastercamNativeSolidBuilder
             // Chain while profile entities are still visible. Explicit entity
             // input is used; no user selection or chaining dialog is invoked.
             var geometry = committedLines.Cast<Geometry>().ToArray();
-            var chains = ChainManager.ChainGeometry(geometry);
-            if (chains is null || chains.Length != 1)
+            var createdChains = ChainManager.ChainGeometry(geometry);
+            if (createdChains is null)
+                throw new InvalidOperationException("Mastercam failed to allocate the profile chain array.");
+
+            chains = createdChains;
+            chainsAllocated = true;
+            if (chains.Length != 1)
                 throw new InvalidOperationException(
-                    $"Mastercam must create exactly one profile chain; it returned {chains?.Length ?? 0}.");
+                    $"Mastercam must create exactly one profile chain; it returned {chains.Length}.");
 
             var chainArea = chains[0].Area;
             if (!chains[0].IsFlat || !chains[0].IsClosed ||
@@ -132,6 +139,12 @@ public static class MastercamNativeSolidBuilder
         }
         finally
         {
+            if (chainsAllocated)
+            {
+                try { ChainManager.FreeChainArray(ref chains); }
+                catch { /* Preserve the original geometry-generation result. */ }
+            }
+
             if (!keepProfile)
             {
                 foreach (var line in committedLines)
