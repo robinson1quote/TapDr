@@ -95,7 +95,7 @@ public sealed class ViseDovetailProfileGeneratorTests
             ViseDovetailProfileGenerator.Generate(
                 ValidParameters(depth: 0.300, angle: 30.0)));
 
-        Assert.Contains("consumes a locating flat", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("smaller than both locating-flat lengths", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
