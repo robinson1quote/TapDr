@@ -6,29 +6,36 @@ param(
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
-$RepoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+# This script lives in <repo>\installer; PSScriptRoot is the installer folder.
+$RepoRoot = Split-Path -Parent $PSScriptRoot
 $Solution = Join-Path $RepoRoot "TapDR.Dovetail.sln"
 $TestProject = Join-Path $RepoRoot "tests\TapDR.Dovetail.Core.Tests\TapDR.Dovetail.Core.Tests.csproj"
 $AdapterProject = Join-Path $RepoRoot "src\TapDR.Dovetail.Mastercam2027\TapDR.Dovetail.Mastercam2027.csproj"
 $AdapterOutput = Join-Path $RepoRoot "src\TapDR.Dovetail.Mastercam2027\bin\Release\net10.0-windows"
 $InstallDirectory = Join-Path $env:PUBLIC "Documents\Shared Mastercam 2027\Add-Ins\TapDR Dovetail Stock Generator"
+$InstallParent = Split-Path -Parent $InstallDirectory
+$BackupRoot = Join-Path $InstallParent "TapDR Dovetail Backups"
+$Timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+$StagingDirectory = Join-Path $InstallParent ("TapDR Dovetail Staging " + $Timestamp)
+$BackupPath = Join-Path $BackupRoot $Timestamp
 $Desktop = [Environment]::GetFolderPath([Environment+SpecialFolder]::DesktopDirectory)
-$LogPath = Join-Path $Desktop ("TapDR_Dovetail_Build_" + (Get-Date -Format "yyyyMMdd_HHmmss") + ".log")
-Start-Transcript -Path $LogPath -Force | Out-Null
+$LogPath = Join-Path $Desktop ("TapDR_Dovetail_Build_" + $Timestamp + ".log")
+$TranscriptStarted = $false
+$PreviousInstallMoved = $false
 
 try {
+    Start-Transcript -Path $LogPath -Force | Out-Null
+    $TranscriptStarted = $true
+
     Write-Host ""
     Write-Host "TapDR 5th Axis Stock Generator — Mastercam 2027" -ForegroundColor Cyan
     Write-Host "Checking build prerequisites..."
 
-    if (-not (Test-Path (Join-Path $MastercamInstallDir "NETHook3_0.dll"))) {
-        throw "Mastercam 2027 NET-Hook SDK was not found at: $MastercamInstallDir"
-    }
-    if (-not (Test-Path (Join-Path $MastercamInstallDir "ModelessDialogTabHandler.dll"))) {
-        throw "Mastercam ModelessDialogTabHandler.dll was not found."
-    }
-    if (-not (Test-Path (Join-Path $MastercamInstallDir "MCGeomSld.dll"))) {
-        throw "Mastercam MCGeomSld.dll was not found. The native solid runtime is incomplete."
+    foreach ($requiredFile in @("NETHook3_0.dll", "ModelessDialogTabHandler.dll", "MCGeomSld.dll")) {
+        $path = Join-Path $MastercamInstallDir $requiredFile
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+            throw "Required Mastercam 2027 file was not found: $path"
+        }
     }
     if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
         throw ".NET SDK command 'dotnet' was not found."
@@ -37,9 +44,11 @@ try {
     if ($LASTEXITCODE -ne 0 -or -not ($sdkList -match '(^|\s)10\.')) {
         throw ".NET 10 SDK is required. Installed SDKs: $($sdkList -join '; ')"
     }
-    if (-not (Test-Path $Solution)) { throw "Solution not found: $Solution" }
-    if (-not (Test-Path (Join-Path $RepoRoot "src\TapDR.Dovetail.Mastercam2027\TapDR.Dovetail.Mastercam2027.ft"))) {
-        throw "Mastercam function table is missing."
+    foreach ($requiredPath in @($Solution, $TestProject, $AdapterProject,
+        (Join-Path $RepoRoot "src\TapDR.Dovetail.Mastercam2027\TapDR.Dovetail.Mastercam2027.ft"))) {
+        if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
+            throw "Required project file was not found: $requiredPath"
+        }
     }
 
     Write-Host ""
@@ -54,23 +63,18 @@ try {
 
     $AdapterDll = Join-Path $AdapterOutput "TapDR.Dovetail.Mastercam2027.dll"
     $CoreDll = Join-Path $AdapterOutput "TapDR.Dovetail.Core.dll"
-    if (-not (Test-Path $AdapterDll)) { throw "Build output missing: $AdapterDll" }
-    if (-not (Test-Path $CoreDll)) { throw "Build output missing: $CoreDll" }
-
-    Write-Host ""
-    Write-Host "[3/3] Installing into Shared Mastercam 2027 Add-Ins..." -ForegroundColor Yellow
-    if (Test-Path $InstallDirectory) {
-        $BackupRoot = Join-Path (Split-Path -Parent $InstallDirectory) "TapDR Dovetail Backups"
-        New-Item -ItemType Directory -Force -Path $BackupRoot | Out-Null
-        $BackupPath = Join-Path $BackupRoot (Get-Date -Format "yyyyMMdd_HHmmss")
-        Copy-Item -LiteralPath $InstallDirectory -Destination $BackupPath -Recurse -Force
-        Write-Host "Previous installation backed up to: $BackupPath"
+    foreach ($requiredOutput in @($AdapterDll, $CoreDll)) {
+        if (-not (Test-Path -LiteralPath $requiredOutput -PathType Leaf)) {
+            throw "Build output missing: $requiredOutput"
+        }
     }
 
-    New-Item -ItemType Directory -Force -Path $InstallDirectory | Out-Null
-    Copy-Item -LiteralPath $AdapterDll -Destination $InstallDirectory -Force
-    Copy-Item -LiteralPath $CoreDll -Destination $InstallDirectory -Force
-    Copy-Item -LiteralPath (Join-Path $RepoRoot "src\TapDR.Dovetail.Mastercam2027\TapDR.Dovetail.Mastercam2027.ft") -Destination $InstallDirectory -Force
+    Write-Host ""
+    Write-Host "[3/3] Staging the verified build..." -ForegroundColor Yellow
+    New-Item -ItemType Directory -Force -Path $StagingDirectory | Out-Null
+    Copy-Item -LiteralPath $AdapterDll -Destination $StagingDirectory -Force
+    Copy-Item -LiteralPath $CoreDll -Destination $StagingDirectory -Force
+    Copy-Item -LiteralPath (Join-Path $RepoRoot "src\TapDR.Dovetail.Mastercam2027\TapDR.Dovetail.Mastercam2027.ft") -Destination $StagingDirectory -Force
 
     $Readme = @'
 TapDR 5th Axis Stock Generator — Mastercam 2027
@@ -85,18 +89,46 @@ Launch:
 2. Open Home > Run Add-In > Run Third-Party Add-In.
 3. Select TapDR.Dovetail.Mastercam2027.dll from this folder.
 
-The add-in currently generates the DSP-V vise stock-prep profile for V75100X,
-original V562, and V6105. Fixture stock-prep profiles remain disabled until
-their drawing coordinates are verified.
+The current generator creates the DSP-V vise stock-prep solid for V75100X,
+original V562, and V6105. D115, D22, and D05125 remain separate fixture
+stock-prep profiles and are not yet enabled for solid generation.
 
-The geometry core tests ran successfully before installation. This installer
-does not claim that the add-in has been runtime-verified in Mastercam.
+The installer runs the geometry-core tests and stops without replacing an
+existing installation if the tests or add-in build fail. A successful build
+does not by itself prove runtime operation inside Mastercam.
 '@
-    Set-Content -LiteralPath (Join-Path $InstallDirectory "README.txt") -Value $Readme -Encoding UTF8
+    Set-Content -LiteralPath (Join-Path $StagingDirectory "README.txt") -Value $Readme -Encoding UTF8
+
+    foreach ($fileName in @("TapDR.Dovetail.Mastercam2027.dll", "TapDR.Dovetail.Core.dll", "TapDR.Dovetail.Mastercam2027.ft", "README.txt")) {
+        if (-not (Test-Path -LiteralPath (Join-Path $StagingDirectory $fileName) -PathType Leaf)) {
+            throw "Staging verification failed; missing $fileName."
+        }
+    }
+
+    if (Test-Path -LiteralPath $InstallDirectory) {
+        New-Item -ItemType Directory -Force -Path $BackupRoot | Out-Null
+        Move-Item -LiteralPath $InstallDirectory -Destination $BackupPath
+        $PreviousInstallMoved = $true
+    }
+
+    try {
+        Move-Item -LiteralPath $StagingDirectory -Destination $InstallDirectory
+    }
+    catch {
+        if ($PreviousInstallMoved -and (Test-Path -LiteralPath $BackupPath) -and
+            -not (Test-Path -LiteralPath $InstallDirectory)) {
+            Move-Item -LiteralPath $BackupPath -Destination $InstallDirectory
+            $PreviousInstallMoved = $false
+        }
+        throw
+    }
 
     Write-Host ""
     Write-Host "INSTALLATION COMPLETE" -ForegroundColor Green
     Write-Host "Installed to: $InstallDirectory"
+    if ($PreviousInstallMoved) {
+        Write-Host "Previous installation backed up to: $BackupPath"
+    }
     Write-Host "Build/test log: $LogPath"
     Write-Host "Restart Mastercam 2027 and launch from Home > Run Add-In > Run Third-Party Add-In."
 }
@@ -104,15 +136,20 @@ catch {
     Write-Host ""
     Write-Host "BUILD / INSTALL FAILED" -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
-    if ($StagingDirectory -and (Test-Path $StagingDirectory)) {
-        Remove-Item -LiteralPath $StagingDirectory -Recurse -Force -ErrorAction SilentlyContinue
-    }
-    if ($BackupPath -and (Test-Path $BackupPath) -and -not (Test-Path $InstallDirectory)) {
+
+    if ($PreviousInstallMoved -and (Test-Path -LiteralPath $BackupPath) -and
+        -not (Test-Path -LiteralPath $InstallDirectory)) {
         Move-Item -LiteralPath $BackupPath -Destination $InstallDirectory -ErrorAction SilentlyContinue
     }
+
     Write-Host "Log: $LogPath"
     exit 1
 }
 finally {
-    Stop-Transcript | Out-Null
+    if (Test-Path -LiteralPath $StagingDirectory) {
+        Remove-Item -LiteralPath $StagingDirectory -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    if ($TranscriptStarted) {
+        Stop-Transcript | Out-Null
+    }
 }
