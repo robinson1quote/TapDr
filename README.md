@@ -50,12 +50,12 @@ The drawings also specify 45-degree flanks, 2 × R0.015 maximum inside radii, an
 - [x] DSP-V 75% width advisory based on generated locating-face width.
 - [x] Core regression tests for section coordinates, edge breaks, dimensions, angles, units, ratio warning, and fixture catalog values.
 - [x] GitHub Actions workflow for core tests (passing result not yet verified).
-- [x] WinForms NET-Hook entry point, vise input UI, and live prism preview.
-- [x] Mastercam solid extrusion adapter source; section in YZ, extrusion along X.
+- [x] WinForms NET-Hook entry point, all-six-model selector, vise input UI, and live prism preview (fixture generation disabled pending coordinate mapping).
+- [x] Mastercam solid extrusion adapter source; section in YZ, extrusion along X, Z-up stock height, centering on machine axes.
 - [x] Mastercam NET-Hook function table.
 - [x] One-click `Build-and-Install.bat` and transactional PowerShell installer source.
 - [ ] Fixture coordinate models and fixture generation UI.
-- [ ] Final DSP-V contact/relief validation and in-Mastercam B-rep verification.
+- [ ] Final DSP-V contact/relief review and in-Mastercam B-rep verification.
 - [ ] Mastercam 2027 Windows compile and host test.
 - [ ] Toolbar integration.
 
