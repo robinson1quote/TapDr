@@ -99,14 +99,8 @@ internal sealed class DovetailGeneratorForm : Form
         leftStack.Controls.Add(subtitle);
 
         var hardwareGroup = MakeGroup("HARDWARE", 2, 430);
-        ConfigureCombo(_hardware, [
-            "V75100X — R96-V75100 adapter / 96 mm",
-            "V562 — original / 96 mm",
-            "V6105 — 96 mm",
-            "R96 D115 — fixture / 96 mm",
-            "R96 D22 — fixture / 96 mm",
-            "R96 D05125 — fixture / 96 mm"
-        ]);
+        ConfigureCombo(_hardware, SupportedHardwareCatalog.All
+            .Select(hardware => hardware.DisplayName).ToArray());
         ConfigureCombo(_units, ["Inch", "Millimeter"]);
         AddRow(hardwareGroup, 0, "Hardware model", _hardware);
         AddRow(hardwareGroup, 1, "Input units", _units);
@@ -255,7 +249,10 @@ internal sealed class DovetailGeneratorForm : Form
 
     private void UpdatePreview()
     {
-        if (_hardware.SelectedIndex >= 3)
+        var selectedHardware = SelectedHardware;
+        if (selectedHardware is null ||
+            !selectedHardware.StockPrepGenerationEnabled ||
+            selectedHardware.Category != HardwareCategory.Vise)
         {
             _currentProfile = null;
             _preview.Profile = null;
@@ -264,9 +261,10 @@ internal sealed class DovetailGeneratorForm : Form
             if (_profileGroup is not null)
                 _profileGroup.Enabled = false;
 
-            var fixture = _hardware.SelectedItem?.ToString() ?? "Selected fixture";
             _status.ForeColor = Color.FromArgb(161, 102, 22);
-            _status.Text = $"{fixture}: fixture stock-prep geometry is cataloged but generation is blocked until its drawing coordinates are fully mapped.";
+            _status.Text = selectedHardware is null
+                ? "Select one of the six supported 5th Axis hardware models."
+                : $"{selectedHardware.DisplayName}: fixture stock-prep generation remains disabled until its drawing coordinates are fully mapped.";
             _dimensionSummary.Text = "Fixture geometry not yet enabled.";
             _preview.Invalidate();
             return;
@@ -316,20 +314,22 @@ internal sealed class DovetailGeneratorForm : Form
         try
         {
             var parameters = ReadParameters();
-            var profile = ViseDovetailProfileGenerator.Generate(parameters);
-            var model = _hardware.SelectedIndex switch
+            var selectedHardware = SelectedHardware
+                ?? throw new InvalidOperationException("Select one of the six supported 5th Axis hardware models.");
+            if (!selectedHardware.StockPrepGenerationEnabled ||
+                selectedHardware.Category != HardwareCategory.Vise ||
+                !string.Equals(selectedHardware.StockPrepProfileId, "DSP-V", StringComparison.Ordinal))
             {
-                0 => "V75100X / R96-V75100 / 96 mm",
-                1 => "V562 original / 96 mm",
-                2 => "V6105 / 96 mm",
-                _ => throw new InvalidOperationException("Fixture stock-prep generation is disabled until its manufacturer drawing coordinates are verified.")
-            };
+                throw new InvalidOperationException(
+                    "This fixture stock-prep profile is locked until its manufacturer drawing coordinates are fully mapped.");
+            }
 
+            var profile = ViseDovetailProfileGenerator.Generate(parameters);
             var result = MastercamNativeSolidBuilder.CreateViseBlank(
                 profile,
                 parameters.StockLength,
                 parameters.Unit,
-                model,
+                selectedHardware.AssemblyDescription,
                 ReadValue(_offsetX, "Offset X"),
                 ReadValue(_offsetY, "Offset Y"),
                 ReadValue(_offsetZ, "Offset Z"),
@@ -347,6 +347,12 @@ internal sealed class DovetailGeneratorForm : Form
             _status.Text = ex.GetBaseException().Message;
         }
     }
+
+    private HardwareDefinition? SelectedHardware =>
+        _hardware.SelectedItem is string displayName
+            ? SupportedHardwareCatalog.All.SingleOrDefault(hardware =>
+                string.Equals(hardware.DisplayName, displayName, StringComparison.Ordinal))
+            : null;
 
     private ViseStockPrepParameters ReadParameters() =>
         new()
