@@ -5,29 +5,51 @@ namespace TapDR.Dovetail.Core.Tests;
 
 public sealed class LengthUnitsTests
 {
-    [Fact]
-    public void InchToMillimeter_UsesExact25Point4Factor()
+    [Theory]
+    [InlineData(1.0, 25.4)]
+    [InlineData(0.5, 12.7)]
+    [InlineData(2.0, 50.8)]
+    [InlineData(0.125, 3.175)]
+    public void Convert_InchesToMillimeters_UsesExactInternationalConversion(
+        double inches, double expectedMillimeters)
     {
-        Assert.Equal(25.4, LengthUnits.ToMillimeters(1.0, LengthUnit.Inch), 10);
-        Assert.Equal(50.8, LengthUnits.Convert(2.0, LengthUnit.Inch, LengthUnit.Millimeter), 10);
+        var actual = LengthUnits.Convert(inches, LengthUnit.Inch, LengthUnit.Millimeter);
+        Assert.Equal(expectedMillimeters, actual, 10);
+    }
+
+    [Theory]
+    [InlineData(25.4, 1.0)]
+    [InlineData(12.7, 0.5)]
+    [InlineData(50.8, 2.0)]
+    [InlineData(3.175, 0.125)]
+    public void Convert_MillimetersToInches_UsesExactInternationalConversion(
+        double millimeters, double expectedInches)
+    {
+        var actual = LengthUnits.Convert(millimeters, LengthUnit.Millimeter, LengthUnit.Inch);
+        Assert.Equal(expectedInches, actual, 10);
+    }
+
+    [Theory]
+    [InlineData(0.001)]
+    [InlineData(0.080)]
+    [InlineData(1.0)]
+    [InlineData(123.456)]
+    public void Convert_RoundTripsWithoutChangingLength(double value)
+    {
+        var millimeters = LengthUnits.Convert(value, LengthUnit.Inch, LengthUnit.Millimeter);
+        var roundTrip = LengthUnits.Convert(millimeters, LengthUnit.Millimeter, LengthUnit.Inch);
+        Assert.Equal(value, roundTrip, 12);
     }
 
     [Fact]
-    public void MillimeterToInch_RoundTrips()
-    {
-        var inches = LengthUnits.Convert(63.5, LengthUnit.Millimeter, LengthUnit.Inch);
-        Assert.Equal(2.5, inches, 10);
-    }
-
-    [Fact]
-    public void Conversion_RejectsInvalidSourceUnit()
+    public void Convert_RejectsInvalidSourceUnit()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             LengthUnits.Convert(1.0, (LengthUnit)99, LengthUnit.Inch));
     }
 
     [Fact]
-    public void Conversion_RejectsInvalidDestinationUnit()
+    public void Convert_RejectsInvalidTargetUnit()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             LengthUnits.Convert(1.0, LengthUnit.Inch, (LengthUnit)99));
