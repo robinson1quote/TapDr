@@ -24,18 +24,30 @@ public static class MastercamNativeSolidBuilder
         ViseDovetailCrossSection profile,
         double stockLength,
         LengthUnit inputUnit,
-        string hardwareModel)
+        string hardwareModel,
+        double offsetX = 0,
+        double offsetY = 0,
+        double offsetZ = 0,
+        bool centerWidthOnX = false,
+        bool centerLengthOnZ = false)
     {
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentException.ThrowIfNullOrWhiteSpace(hardwareModel);
         if (!double.IsFinite(stockLength) || stockLength <= 0)
             throw new ArgumentOutOfRangeException(nameof(stockLength), "Stock length must be finite and positive.");
 
+        if (!double.IsFinite(offsetX) || !double.IsFinite(offsetY) || !double.IsFinite(offsetZ))
+            throw new ArgumentException("Origin offsets must be finite values.");
+
         var documentUnit = SettingsManager.Metric ? LengthUnit.Millimeter : LengthUnit.Inch;
         var scale = LengthUnits.Convert(1.0, inputUnit, documentUnit);
         var nativeLength = stockLength * scale;
         if (!double.IsFinite(nativeLength) || nativeLength <= 0)
             throw new InvalidOperationException("Stock length conversion to Mastercam file units failed.");
+
+        var baseX = offsetX * scale - (centerWidthOnX ? profile.StockWidth * scale / 2.0 : 0.0);
+        var baseY = offsetY * scale;
+        var baseZ = offsetZ * scale - (centerLengthOnZ ? nativeLength / 2.0 : 0.0);
 
         var descriptor = $"TapDR {hardwareModel} DSP-V stock blank";
         var constructionLevelName = $"TapDR Profile - {DateTime.Now:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}"[..55];
@@ -49,7 +61,7 @@ public static class MastercamNativeSolidBuilder
         try
         {
             var converted = profile.Boundary
-                .Select(point => new Point3D(point.X * scale, point.Y * scale, 0.0))
+                .Select(point => new Point3D(point.X * scale + baseX, point.Y * scale + baseY, baseZ))
                 .ToArray();
 
             for (var i = 0; i < converted.Length; i++)
