@@ -31,7 +31,7 @@ try {
     Write-Host "TapDR 5th Axis Stock Generator — Mastercam 2027" -ForegroundColor Cyan
     Write-Host "Checking build prerequisites..."
 
-    foreach ($requiredFile in @("NETHook3_0.dll", "ModelessDialogTabHandler.dll", "MCGeomSld.dll")) {
+    foreach ($requiredFile in @("NETHook3_0.dll", "MCGeomSld.dll")) {
         $path = Join-Path $MastercamInstallDir $requiredFile
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
             throw "Required Mastercam 2027 file was not found: $path"
