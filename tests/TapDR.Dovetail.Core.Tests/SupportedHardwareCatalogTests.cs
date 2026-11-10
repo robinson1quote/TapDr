@@ -63,6 +63,26 @@ public sealed class SupportedHardwareCatalogTests
     }
 
     [Fact]
+    public void AllThreeVisesUseDSPVAndAllThreeFixturesUseDistinctProfiles()
+    {
+        var viseModels = SupportedHardwareCatalog.All
+            .Where(item => item.Category == HardwareCategory.Vise)
+            .ToArray();
+        var fixtureModels = SupportedHardwareCatalog.All
+            .Where(item => item.Category == HardwareCategory.DovetailFixture)
+            .ToArray();
+
+        Assert.Equal(3, viseModels.Length);
+        Assert.All(viseModels, item => Assert.Equal("DSP-V", item.StockPrepProfileId));
+
+        Assert.Equal(3, fixtureModels.Length);
+        Assert.Equal(
+            new[] { "DSP-D115", "DSP-D22", "DSP-D05125" },
+            fixtureModels.Select(item => item.StockPrepProfileId));
+        Assert.All(fixtureModels, item => Assert.False(item.StockPrepGenerationEnabled));
+    }
+
+    [Fact]
     public void CatalogRejectsUnlistedSubstituteModels()
     {
         Assert.Throws<KeyNotFoundException>(() => SupportedHardwareCatalog.Get("V562X"));
