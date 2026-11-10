@@ -25,20 +25,20 @@ public sealed class ViseDovetailProfileGeneratorTests
         };
 
     [Fact]
-    public void Generate_AppliesToeEdgeBreakAndKeepsProfileInsideRawStock()
+    public void Generate_AppliesToeEdgeBreakAndProjectsTongueBelowRawStock()
     {
         var profile = ViseDovetailProfileGenerator.Generate(ValidParameters());
         var points = profile.Boundary;
 
         Assert.Equal(10, points.Count);
-        AssertPoint(points[0], 0.000, 0.080);
-        AssertPoint(points[1], 0.250, 0.080);
-        AssertPoint(points[2], 0.1770710678, 0.0070710678);
-        AssertPoint(points[3], 0.180, 0.000);
-        AssertPoint(points[4], 1.820, 0.000);
-        AssertPoint(points[5], 1.8229289322, 0.0070710678);
-        AssertPoint(points[6], 1.750, 0.080);
-        AssertPoint(points[7], 2.000, 0.080);
+        AssertPoint(points[0], 0.000, 0.000);
+        AssertPoint(points[1], 0.250, 0.000);
+        AssertPoint(points[2], 0.1770710678, -0.0729289322);
+        AssertPoint(points[3], 0.180, -0.080);
+        AssertPoint(points[4], 1.820, -0.080);
+        AssertPoint(points[5], 1.8229289322, -0.0729289322);
+        AssertPoint(points[6], 1.750, 0.000);
+        AssertPoint(points[7], 2.000, 0.000);
         AssertPoint(points[8], 2.000, 1.000);
         AssertPoint(points[9], 0.000, 1.000);
 
@@ -52,7 +52,7 @@ public sealed class ViseDovetailProfileGeneratorTests
         Assert.All(points, p =>
         {
             Assert.InRange(p.X, 0.0, 2.0);
-            Assert.InRange(p.Y, 0.0, 1.0);
+            Assert.InRange(p.Y, -0.080, 1.0);
         });
         Assert.True(SignedArea(points) > 0);
     }
@@ -64,8 +64,8 @@ public sealed class ViseDovetailProfileGeneratorTests
 
         Assert.Equal(8, profile.Boundary.Count);
         Assert.Equal(0.0, profile.AppliedEdgeBreak);
-        AssertPoint(profile.Boundary[2], 0.170, 0.000);
-        AssertPoint(profile.Boundary[3], 1.830, 0.000);
+        AssertPoint(profile.Boundary[2], 0.170, -0.080);
+        AssertPoint(profile.Boundary[3], 1.830, -0.080);
     }
 
     [Fact]
