@@ -337,8 +337,9 @@ internal sealed class DovetailGeneratorForm : Form
                 _centerLengthOnX.Checked);
 
             _status.ForeColor = Color.FromArgb(35, 119, 79);
-            _status.Text =
-                $"Created {result.Descriptor}. Hidden profile sketch is on Mastercam level {result.ConstructionLevel}.";
+            _status.Text = result.ProfileCurvesHidden
+                ? $"Created {result.Descriptor}. Profile sketch is hidden on Mastercam level {result.ConstructionLevel}."
+                : $"Created {result.Descriptor}. Profile sketch remains visible on Mastercam level {result.ConstructionLevel}.";
         }
         catch (Exception ex)
         {
