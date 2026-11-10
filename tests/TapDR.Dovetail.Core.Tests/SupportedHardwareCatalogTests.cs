@@ -28,6 +28,9 @@ public sealed class SupportedHardwareCatalogTests
 
         Assert.Equal(HardwareCategory.Vise, model.Category);
         Assert.Equal("DSP-V", model.StockPrepProfileId);
+        Assert.Equal(
+            new[] { "V75100X vise", "R96-V75100 adapter", "96 mm mounting interface" },
+            model.AssemblyComponents);
         Assert.Contains("V75100X vise", model.AssemblyDescription);
         Assert.Contains("R96-V75100 adapter", model.AssemblyDescription);
         Assert.Contains("96 mm mounting interface", model.AssemblyDescription);
