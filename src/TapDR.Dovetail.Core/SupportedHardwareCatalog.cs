@@ -13,9 +13,10 @@ public sealed record HardwareDefinition
     public required HardwareCategory Category { get; init; }
     public required double MountingInterfaceMillimeters { get; init; }
     public required string StockPrepProfileId { get; init; }
-    public required string AssemblyDescription { get; init; }
+    public required IReadOnlyList<string> AssemblyComponents { get; init; }
     public required bool StockPrepGenerationEnabled { get; init; }
 
+    public string AssemblyDescription => string.Join(" + ", AssemblyComponents);
     public override string ToString() => DisplayName;
 }
 
@@ -37,7 +38,12 @@ public static class SupportedHardwareCatalog
             Category = HardwareCategory.Vise,
             MountingInterfaceMillimeters = MountingInterfaceMillimeters,
             StockPrepProfileId = "DSP-V",
-            AssemblyDescription = "V75100X vise + R96-V75100 adapter + 96 mm mounting interface",
+            AssemblyComponents = Array.AsReadOnly(new[]
+            {
+                "V75100X vise",
+                "R96-V75100 adapter",
+                "96 mm mounting interface"
+            }),
             StockPrepGenerationEnabled = true
         },
         new()
@@ -47,7 +53,11 @@ public static class SupportedHardwareCatalog
             Category = HardwareCategory.Vise,
             MountingInterfaceMillimeters = MountingInterfaceMillimeters,
             StockPrepProfileId = "DSP-V",
-            AssemblyDescription = "V562 original vise / 96 mm mounting interface",
+            AssemblyComponents = Array.AsReadOnly(new[]
+            {
+                "V562 original vise",
+                "96 mm mounting interface"
+            }),
             StockPrepGenerationEnabled = true
         },
         new()
@@ -57,7 +67,11 @@ public static class SupportedHardwareCatalog
             Category = HardwareCategory.Vise,
             MountingInterfaceMillimeters = MountingInterfaceMillimeters,
             StockPrepProfileId = "DSP-V",
-            AssemblyDescription = "V6105 vise / 96 mm mounting interface",
+            AssemblyComponents = Array.AsReadOnly(new[]
+            {
+                "V6105 vise",
+                "96 mm mounting interface"
+            }),
             StockPrepGenerationEnabled = true
         },
         new()
@@ -67,7 +81,11 @@ public static class SupportedHardwareCatalog
             Category = HardwareCategory.DovetailFixture,
             MountingInterfaceMillimeters = MountingInterfaceMillimeters,
             StockPrepProfileId = "DSP-D115",
-            AssemblyDescription = "R96 D115 fixture / 96 mm mounting interface",
+            AssemblyComponents = Array.AsReadOnly(new[]
+            {
+                "R96 D115 fixture",
+                "96 mm mounting interface"
+            }),
             StockPrepGenerationEnabled = false
         },
         new()
@@ -77,7 +95,11 @@ public static class SupportedHardwareCatalog
             Category = HardwareCategory.DovetailFixture,
             MountingInterfaceMillimeters = MountingInterfaceMillimeters,
             StockPrepProfileId = "DSP-D22",
-            AssemblyDescription = "R96 D22 fixture / 96 mm mounting interface",
+            AssemblyComponents = Array.AsReadOnly(new[]
+            {
+                "R96 D22 fixture",
+                "96 mm mounting interface"
+            }),
             StockPrepGenerationEnabled = false
         },
         new()
@@ -87,7 +109,11 @@ public static class SupportedHardwareCatalog
             Category = HardwareCategory.DovetailFixture,
             MountingInterfaceMillimeters = MountingInterfaceMillimeters,
             StockPrepProfileId = "DSP-D05125",
-            AssemblyDescription = "R96 D05125 fixture / 96 mm mounting interface",
+            AssemblyComponents = Array.AsReadOnly(new[]
+            {
+                "R96 D05125 fixture",
+                "96 mm mounting interface"
+            }),
             StockPrepGenerationEnabled = false
         }
     ];
