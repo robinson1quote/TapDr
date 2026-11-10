@@ -98,7 +98,7 @@ internal sealed class DovetailGeneratorForm : Form
         leftStack.Controls.Add(subtitle);
 
         var hardwareGroup = MakeGroup("HARDWARE", 2, 430);
-        ConfigureCombo(_hardware, ["V75100X — R96-V75100 adapter", "V562 — original 2-bolt vise", "V6105"]);
+        ConfigureCombo(_hardware, ["V75100X — R96-V75100 adapter", "V562 — original / 96 mm mount", "V6105 — 96 mm mount"]);
         ConfigureCombo(_units, ["Inch", "Millimeter"]);
         AddRow(hardwareGroup, 0, "Vise model", _hardware);
         AddRow(hardwareGroup, 1, "Input units", _units);
@@ -266,7 +266,7 @@ internal sealed class DovetailGeneratorForm : Form
                 : Color.FromArgb(52, 111, 83);
             _status.Text = validation.HasWarnings
                 ? string.Join(" ", validation.Issues.Where(i => i.Severity == ValidationSeverity.Warning).Select(i => i.Message))
-                : "Profile valid. Ready to create the native Mastercam solid.";
+                : "Preview checks passed. Verify the generated stock before machining; production validation is still pending.";
             _dimensionSummary.Text =
                 $"{Format(parameters.StockLength)} × {Format(parameters.StockWidth)} × {Format(parameters.StockHeight)} {UnitSuffix(parameters.Unit)}";
             _preview.Invalidate();
