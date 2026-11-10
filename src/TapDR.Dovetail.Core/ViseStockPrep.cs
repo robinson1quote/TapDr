@@ -83,8 +83,8 @@ public static class ViseStockPrepValidator
             Error("VISE-FLAT-L", $"Left locating flat must be at least {minFlat:G6} {p.Unit}.");
         if (p.RightLocatingFlat < minFlat)
             Error("VISE-FLAT-R", $"Right locating flat must be at least {minFlat:G6} {p.Unit}.");
-        if (p.DovetailDepth > p.StockHeight)
-            Error("VISE-DEPTH-STOCK", "Dovetail depth cannot exceed stock height.");
+        if (p.DovetailDepth >= p.StockHeight)
+            Error("VISE-DEPTH-STOCK", "Dovetail depth must be less than stock height so the stock retains a top web.");
         if (double.IsFinite(p.MaximumEdgeBreak) && p.MaximumEdgeBreak > maxEdge)
             Error("VISE-EDGE-BREAK-LIMIT", $"Edge break cannot exceed {maxEdge:G6} {p.Unit}.");
         if (p.DovetailDepth > nominalDepth)
