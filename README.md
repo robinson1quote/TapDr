@@ -18,13 +18,13 @@ Vise stock prep and fixture stock prep are separate profile families. Fixture st
 
 The 5th Axis DSP-V Rev A drawing applies to all 5th Axis vises. It specifies 0.080 in dovetail depth C, two 0.250 in minimum outside locating flats B, 45-degree flanks, and a 0.010 in maximum edge break at the dovetail point. The 75% dovetail-width note is guidance, not an absolute rule.
 
-The core creates the male dovetail tongue inside the entered raw-stock envelope. It calculates the flank expansion from depth and angle, applies both toe edge breaks, and computes the actual locating-face width:
+The core preserves the entered rectangular blank dimensions and creates the male dovetail tongue below its underside. Stock height is measured from the raw blank's underside datum to its top; the 0.080 in tongue projects below that datum. It calculates the flank expansion from depth and angle, applies both toe edge breaks, and computes the actual locating-face width:
 
 `D = stock width - left flat - right flat + 2 × flank expansion`
 
 The 75% advisory is checked against D/stock width. It warns only; it does not reject or silently resize the profile.
 
-Mastercam stock coordinates are Z-up: blank length runs along X, width along Y, and height along Z. The native adapter source constructs the section in the YZ plane and extrudes along X. The preview is a visual section/prism preview, not a rendering of a Mastercam B-rep.
+Mastercam stock coordinates are Z-up: blank length runs along X, width along Y, and raw blank height along Z. Z=0 is the underside of the rectangular blank and the male tongue extends to Z=-0.080 in. The native adapter source constructs the section in the YZ plane and extrudes along X. The preview is a visual section/prism preview, not a rendering of a Mastercam B-rep.
 
 The DSP-V drawing's separate instruction to program the dovetail cutter from the part centerline is a cutter-path note. This add-in creates stock geometry; it does not create a cutter toolpath.
 
