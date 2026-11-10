@@ -15,12 +15,12 @@ The drawing states it applies to all 5th Axis vises. It identifies C as the most
 
 In Mastercam machine coordinates the profile width maps to Y, stock height maps to vertical Z, and stock length extrudes along X. This keeps the blank in the normal Z-up machine orientation.
 
-The generator represents the stock inside its raw rectangular envelope:
+The generator preserves the entered raw rectangular blank and adds the dovetail tongue below its underside:
 - X = 0 to stock width W.
-- Y = 0 at the lowest central dovetail locating surface.
-- The two outside underside flats lie at Y = depth d.
-- The stock top lies at Y = stock height H.
-- The complete section stays inside X=[0,W], Y=[0,H]; the generator does not add stock outside the entered blank.
+- Y = 0 is the raw blank's underside datum (the two outside locating flats).
+- The central dovetail toe extends down to Y = -depth d.
+- The stock top remains at Y = stock height H.
+- The full section spans X=[0,W], Y=[-d,H]. A 1.000 in entered blank height therefore remains 1.000 in thick; the overall prepared section is 1.080 in high when d=0.080 in.
 
 Inputs:
 - W: stock width.
@@ -45,9 +45,9 @@ For a 2.000 in wide blank with 0.250 in locating flats, 0.080 in depth, 45-degre
 
 ## Geometry protections and tests authored
 
-- Reject unsupported units, non-finite or non-positive dimensions, depth equal to or greater than stock height, invalid angles, excessive edge breaks, consumed locating flats, and edge breaks too large for the available toe geometry.
+- Reject unsupported units, non-finite or non-positive dimensions, depth greater than stock height, invalid angles, excessive edge breaks, consumed locating flats, and edge breaks too large for the available toe geometry.
 - Generate a counter-clockwise, read-only boundary.
-- Regression tests assert the ten-point edge-broken profile, the sharp-edge zero-break option, depth/angle relationship, stock envelope, orientation, and rejection cases.
+- Regression tests assert the ten-point edge-broken profile, the sharp-edge zero-break option, depth/angle relationship, underside datum, toe projection below raw stock, orientation, and rejection cases.
 
 The test source is committed for exact profile points, actual dovetail width and the 75% advisory. No passing test run is claimed until the GitHub workflow reports success.
 
