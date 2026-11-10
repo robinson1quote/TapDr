@@ -24,25 +24,32 @@ public sealed class ViseDovetailProfileGeneratorTests
         };
 
     [Fact]
-    public void Generate_ReturnsEightPointProfileInsideRawStockEnvelope()
+    public void Generate_ReturnsCorrectMaleDovetailInsideRawStockEnvelope()
     {
         var profile = ViseDovetailProfileGenerator.Generate(ValidParameters());
+        var points = profile.Boundary;
 
-        Assert.Equal(8, profile.Boundary.Count);
-        Assert.Equal(new ProfilePoint2D(0, 0.080), profile.Boundary[2] with { });
-        Assert.Equal(new ProfilePoint2D(2.0, 1.0), profile.Boundary[6]);
+        Assert.Equal(8, points.Count);
+        AssertPoint(points[0], 0.000, 0.080);
+        AssertPoint(points[1], 0.250, 0.080);
+        AssertPoint(points[2], 0.170, 0.000);
+        AssertPoint(points[3], 1.830, 0.000);
+        AssertPoint(points[4], 1.750, 0.080);
+        AssertPoint(points[5], 2.000, 0.080);
+        AssertPoint(points[6], 2.000, 1.000);
+        AssertPoint(points[7], 0.000, 1.000);
+
         Assert.Equal(0.080, profile.UndercutPerSide, 10);
         Assert.Equal(0.160, profile.MaximumDovetailWidth - profile.MouthWidth, 10);
         Assert.False(profile.IsProductionReady);
 
-        // The polygon must wind counter-clockwise and remain within the
-        // entered rectangular stock envelope (no stock added below Z=0).
-        Assert.All(profile.Boundary, p =>
+        // Every point remains inside the entered raw rectangular blank.
+        Assert.All(points, p =>
         {
             Assert.InRange(p.X, 0.0, 2.0);
             Assert.InRange(p.Y, 0.0, 1.0);
         });
-        Assert.True(SignedArea(profile.Boundary) > 0);
+        Assert.True(SignedArea(points) > 0);
     }
 
     [Fact]
@@ -69,27 +76,44 @@ public sealed class ViseDovetailProfileGeneratorTests
     public void Generate_RejectsNonFiniteStockDimensions()
     {
         var p = ValidParameters() with { StockWidth = double.NaN };
-
-        Assert.Throws<ArgumentException>(() =>
-            ViseDovetailProfileGenerator.Generate(p));
+        Assert.Throws<ArgumentException>(() => ViseDovetailProfileGenerator.Generate(p));
     }
 
     [Fact]
     public void Generate_RejectsInvalidFlankAngle()
     {
         var p = ValidParameters(angle: double.PositiveInfinity);
-
-        Assert.Throws<ArgumentException>(() =>
-            ViseDovetailProfileGenerator.Generate(p));
+        Assert.Throws<ArgumentException>(() => ViseDovetailProfileGenerator.Generate(p));
     }
 
     [Fact]
-    public void Generate_RejectsDepthGreaterThanStockHeight()
+    public void Generate_RejectsDepthEqualToOrGreaterThanStockHeight()
     {
-        var p = ValidParameters(depth: 1.1);
+        var equal = ValidParameters(depth: 1.0);
+        var greater = ValidParameters(depth: 1.1);
 
-        Assert.Throws<ArgumentException>(() =>
-            ViseDovetailProfileGenerator.Generate(p));
+        Assert.Throws<ArgumentException>(() => ViseDovetailProfileGenerator.Generate(equal));
+        Assert.Throws<ArgumentException>(() => ViseDovetailProfileGenerator.Generate(greater));
+    }
+
+    [Fact]
+    public void Generate_RejectsInvalidUnit()
+    {
+        var p = ValidParameters() with { Unit = (LengthUnit)99 };
+        Assert.Throws<ArgumentException>(() => ViseDovetailProfileGenerator.Generate(p));
+    }
+
+    [Fact]
+    public void Generate_RejectsEdgeBreakAboveManufacturerMaximum()
+    {
+        var p = ValidParameters() with { MaximumEdgeBreak = 0.0101 };
+        Assert.Throws<ArgumentException>(() => ViseDovetailProfileGenerator.Generate(p));
+    }
+
+    private static void AssertPoint(ProfilePoint2D actual, double x, double y)
+    {
+        Assert.Equal(x, actual.X, 10);
+        Assert.Equal(y, actual.Y, 10);
     }
 
     private static double SignedArea(IReadOnlyList<ProfilePoint2D> points)
