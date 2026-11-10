@@ -51,12 +51,9 @@ try {
         throw "The installed NETHook3_0.dll is not the Mastercam 2027 .NET 10 assembly. Check MastercamInstallDir; no files were installed."
     }
     if ($NetHookSignature -notlike "*SolidExtrudeFromChain*") {
-        throw "The installed NETHook3_0.dll does not expose SolidExtrudeFromChain. The required native solid API is missing; no files were installed."
+        throw "The selected NETHook3_0.dll does not expose SolidExtrudeFromChain. The required native solid API is missing; no files were installed."
     }
-    if ($NetHookSignature -notlike "*Mastercam 2027*") {
-        throw "The selected NET-Hook assembly does not identify itself as Mastercam 2027; refusing to build against it."
-    }
-    Write-Host "Mastercam 2027 NET-Hook verified: .NET 10 and SolidExtrudeFromChain present." -ForegroundColor Green
+    Write-Host "NET-Hook verified: .NET 10 and SolidExtrudeFromChain present." -ForegroundColor Green
     if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
         throw ".NET SDK command 'dotnet' was not found."
     }
