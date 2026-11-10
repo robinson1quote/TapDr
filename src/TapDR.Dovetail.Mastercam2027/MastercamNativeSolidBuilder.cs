@@ -12,7 +12,8 @@ public sealed record NativeSolidBuildResult(
     string Descriptor,
     int ConstructionLevel,
     double StockLengthInMastercamUnits,
-    bool ProfileCurvesRetained);
+    bool ProfileCurvesRetained,
+    bool ProfileCurvesHidden);
 
 /// <summary>
 /// Creates a native Mastercam solid by committing a closed section in the YZ
@@ -97,15 +98,13 @@ public static class MastercamNativeSolidBuilder
                 throw new InvalidOperationException(
                     $"Mastercam must create exactly one profile chain; it returned {chains?.Length ?? 0}.");
 
+            var chainArea = chains[0].Area;
             if (!chains[0].IsFlat || !chains[0].IsClosed ||
-                !double.IsFinite(chains[0].Area) || chains[0].Area <= 0)
+                !double.IsFinite(chainArea) || Math.Abs(chainArea) <= 1e-9)
             {
                 throw new InvalidOperationException(
-                    "Mastercam did not recognize the section as one flat, closed, positive-area chain.");
+                    "Mastercam did not recognize the section as one flat, closed, nonzero-area chain.");
             }
-
-            if (!LevelsManager.SetLevelVisible(level, false))
-                throw new InvalidOperationException("Mastercam could not hide the construction profile level.");
 
             var success = InvokeNativeExtrude(chains[0], nativeLength, descriptor, out var operationMessage);
             if (!success)
@@ -114,14 +113,22 @@ public static class MastercamNativeSolidBuilder
                         ? "Mastercam SolidExtrudeFromChain reported failure."
                         : $"Mastercam SolidExtrudeFromChain failed: {operationMessage}");
 
+            // The solid now exists. Preserve the construction curves even if
+            // the optional level-visibility operation fails; cleanup must never
+            // turn a successful solid creation into a reported failure.
             keepProfile = true;
-            LevelsManager.RefreshLevelsManager();
+            var profileHidden = false;
+            try { profileHidden = LevelsManager.SetLevelVisible(level, false); }
+            catch { /* The completed solid remains valid if hiding the sketch fails. */ }
+            try { LevelsManager.RefreshLevelsManager(); }
+            catch { /* Refreshing the level tree is cosmetic after solid creation. */ }
 
             return new NativeSolidBuildResult(
                 descriptor,
                 level,
                 nativeLength,
-                ProfileCurvesRetained: true);
+                ProfileCurvesRetained: true,
+                ProfileCurvesHidden: profileHidden);
         }
         finally
         {
