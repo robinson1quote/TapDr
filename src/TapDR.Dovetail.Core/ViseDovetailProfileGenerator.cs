@@ -81,7 +81,7 @@ public static class ViseDovetailProfileGenerator
             LeftLocatingFlat = p.LeftLocatingFlat,
             RightLocatingFlat = p.RightLocatingFlat,
             FlankAngleDegrees = p.FlankAngleDegrees,
-            Boundary = points,
+            Boundary = Array.AsReadOnly(points),
             UndercutPerSide = undercut
         };
     }
