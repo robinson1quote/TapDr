@@ -93,6 +93,26 @@ public static class ViseStockPrepValidator
         if (p.StockWidth <= p.LeftLocatingFlat + p.RightLocatingFlat)
             Error("VISE-FLATS-WIDTH", "Stock width must exceed the combined locating-flat widths.");
 
+        // The DSP-V 75% note concerns the actual lower locating-surface width,
+        // not the mouth span between the upper flank starts.
+        if (double.IsFinite(p.StockWidth) && p.StockWidth > 0 &&
+            double.IsFinite(p.DovetailDepth) && p.DovetailDepth > 0 &&
+            double.IsFinite(p.LeftLocatingFlat) && p.LeftLocatingFlat > 0 &&
+            double.IsFinite(p.RightLocatingFlat) && p.RightLocatingFlat > 0 &&
+            double.IsFinite(p.FlankAngleDegrees) &&
+            p.FlankAngleDegrees > 0 && p.FlankAngleDegrees < 90)
+        {
+            var undercut = p.DovetailDepth /
+                           Math.Tan(p.FlankAngleDegrees * Math.PI / 180.0);
+            var locatingWidth = p.StockWidth - p.LeftLocatingFlat -
+                                p.RightLocatingFlat + 2.0 * undercut;
+            var ratio = locatingWidth / p.StockWidth;
+
+            if (double.IsFinite(ratio) && ratio < 0.75)
+                Warning("VISE-WIDTH-RATIO",
+                    $"Calculated dovetail locating width is {ratio:P1} of stock width; DSP-V recommends at least 75%. This is advisory only.");
+        }
+
         return new ViseStockPrepValidation(issues);
 
         void CheckPositive(double value, string name)
