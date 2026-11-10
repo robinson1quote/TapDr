@@ -15,6 +15,9 @@ public sealed record FixtureStockPrepDefinition
     public double? GaugePinDiameterInches { get; init; }
     public double? MaximumInternalRadiusInches { get; init; }
     public double? MaximumEdgeBreakInches { get; init; }
+    public bool DovetailWidthConstantWithDepth { get; init; } = true;
+    public bool SlotToCenterlineDimensionCritical { get; init; } = true;
+    public bool GaugePinMeasurementRequired { get; init; } = true;
 
     /// <summary>
     /// Exact dimension callouts retained from the drawing but not yet mapped to
@@ -22,7 +25,8 @@ public sealed record FixtureStockPrepDefinition
     /// </summary>
     public IReadOnlyList<string> UnmappedDrawingCallouts { get; init; } = Array.Empty<string>();
 
-    public bool CanGenerateProductionGeometry => false;
+    public bool CoordinateModelComplete => false;
+    public bool CanGenerateProductionGeometry => CoordinateModelComplete;
 }
 
 public static class FixtureStockPrepCatalog
