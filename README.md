@@ -42,16 +42,16 @@ The fixture catalog records the separate workpiece-blank profiles and confirmed 
 | DSP-D22 | 0.150 in | 0.2510 ± 0.0005 in | 0.1250 in |
 | DSP-D05125 | 0.080 in | 0.1260 ± 0.0005 in | 0.0625 in |
 
-The drawings also specify 45-degree flanks, 2 × R0.015 maximum inside radii, and 2 × 0.010 in edge breaks. Positional/programming dimensions still need exact mapping to their drawing views before fixture geometry can be enabled. The fixture catalog remains separate from the 96 mm mounting interface.
+The drawings also specify 45-degree flanks, 2 × R0.015 maximum inside radii, and 2 × 0.010 in edge breaks. Their notes state that dovetail width remains constant as depth changes, the slot location relative to the stock centerline is critical, and the pin slot is checked with the specified gauge pin. These conditions are retained as explicit catalog fields. Remaining positional/programming callouts are not yet mapped to full 3D coordinates, so fixture solid generation remains locked. The fixture catalog remains separate from the 96 mm mounting interface.
 
 ## Current source status
 
-- [x] Fixed six-model hardware scope and separate 96 mm interface.
+- [x] Fixed six-model hardware catalog with explicit component assemblies and 96 mm interface metadata.
 - [x] Vise input model, inch/mm conversion, hard-limit validation.
 - [x] Parametric DSP-V male-dovetail cross-section with actual toe edge-break geometry.
 - [x] DSP-V 75% width advisory based on generated locating-face width.
-- [x] Core regression tests for section coordinates, edge breaks, dimensions, angles, units, ratio warning, and fixture catalog values.
-- [x] GitHub Actions workflow for core tests (passing result not yet verified).
+- [x] Core regression tests for section coordinates, edge breaks, dimensions, angles, units, ratio warning, hardware catalog, and fixture catalog values.
+- [x] GitHub Actions .NET 10 core build/test passed: 48 tests, 0 failures (2026-11-10).
 - [x] WinForms NET-Hook entry point, all-six-model selector, vise input UI, and live prism preview (fixture generation disabled pending coordinate mapping).
 - [x] Mastercam solid extrusion adapter source; section in YZ, extrusion along X, Z-up stock height, centering on machine axes.
 - [x] Mastercam NET-Hook function table.
