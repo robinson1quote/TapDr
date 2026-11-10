@@ -1,0 +1,9 @@
+# TapDR 5th Axis Stock Generator — Mastercam NET-Hook
+
+APPLICATION "TapDRDovetailStockGenerator"
+FUNC_DLL "TapDR.Dovetail.Mastercam2027.dll"
+RES_DLL "SAME"
+CATEGORY "TapDR"
+
+FUNCTION NET "Run"
+END_FUNCTION
